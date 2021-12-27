@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-Uel-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一笔画寻路暴力搜索</title>
+    <link rel="stylesheet" href="https://unpkg.zhimg.com/element-ui@2.15.6/lib/theme-chalk/index.css">
+    <style>
+        .inputNumberContent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 47px;
+            height: 47px;
+        }
+        .inputNumberContent .el-input__inner {
+            height: 47px;
+            line-height: 15px;
+            font-size: 15px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        .el-table--enable-row-hover .el-table__body tr:hover > td {
+            background-color: transparent !important;
+        }
+    </style>
+    <style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+</head>
+
+<body>
+<div id="el" style="width: 90%;margin: auto;">
+    <h1>一笔画寻路</h1>
+    <div>
+        棋盘共
+        <el-input-number v-model="totalRow" :min="1" :max="100" @change="initTable"></el-input-number>
+        行，
+        共
+        <el-input-number v-model="totalCol" :min="1" :max="100" @change="initTable"></el-input-number>
+        列
+    </div>
+    <p>1为起点，-1为障碍物，0为可以走的路，点击单元格可以编辑</p>
+    <div :style="{width: totalWidth}">
+        <el-table
+                :border="true"
+                :show-header="false"
+                :data="dataSource"
+                :cell-style="cellStyle"
+                @cell-click="cellClick"
+                :row-key="row => row.key"
+        >
+            <el-table-column
+                    v-for="item in columns"
+                    :key="item.dataIndex"
+                    :prop="item.dataIndex"
+                    align="center"
+                    width="48"
+                    max-height="48"
+            >
+                <template slot-scope="scope">
+                    <template v-if="scope.row.key === cellClickRowIndex && cellClickColumnId === scope.column.id">
+                        <el-input-number
+                                v-model="scope.row[item.dataIndex]"
+                                size="mini"
+                                class="inputNumberContent"
+                                :controls="false"
+                                :min="-1"
+                                :max="1"
+                                :ref="'cell-input-' + cellClickRowIndex + '-' + cellClickColumnId"
+                                @blur="inputBlur"
+                                @focus="el => el.currentTarget.select()"
+                        />
+                    </template>
+                    <template v-else>{{ scope.row[item.dataIndex] }}</template>
+                </template>
+            </el-table-column>
+        </el-table>
+    </div>
+    <el-button @click="pathfind" type="primary" style="margin: 20px 0 20px 0">寻路</el-button>
+    <div v-if="errorMsg">{{errorMsg}}</div>
+    <div :style="{width: totalWidth}" v-if="!errorMsg && dataSource2 != null && dataSource2.length != 0">
+        <el-table
+                :border="true"
+                :show-header="false"
+                :data="dataSource2"
+        >
+            <el-table-column
+                    v-for="item in columns"
+                    :key="item.dataIndex"
+                    :prop="item.dataIndex"
+                    align="center"
+                    width="48">
+            </el-table-column>
+        </el-table>
+    </div>
+</div>
+<a href="https://github.com/NPCDW/Unicursal" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+</body>
+<script src="https://unpkg.zhimg.com/vue@2.6.14/dist/vue.js"></script>
+<script src="https://unpkg.zhimg.com/element-ui@2.15.6/lib/index.js"></script>
+<script src="js/unicursal.js"></script>
+<script>
+    new Vue({
+        el: '#el',
+        data() {
+            return {
+                columns: [
+                    {dataIndex: '0'},
+                    {dataIndex: '1'},
+                    {dataIndex: '2'},
+                    {dataIndex: '3'},
+                    {dataIndex: '4'},
+                    {dataIndex: '5'}
+                ],
+                totalWidth: 48 * 6 + 1 + 'px',
+                dataSource: [
+                    {key: 0, '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0},
+                    {key: 1, '0': -1, '1': 0, '2': 0, '3': -1, '4': 1, '5': 0},
+                    {key: 2, '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0},
+                    {key: 3, '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0},
+                    {key: 4, '0': 0, '1': -1, '2': 0, '3': 0, '4': -1, '5': 0},
+                    {key: 5, '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0}
+                ],
+                dataSource2: [],
+                errorMsg: "",
+                totalRow: 6,
+                totalCol: 6,
+                cellClickRowIndex: null,
+                cellClickColumnId: null,
+            }
+        },
+        methods: {
+            pathfind() {
+                // 棋盘数组（0代表可以走的路，-1代表障碍）示例
+                // matrix: [
+                //     [0, 0, 0, 0, 0, 0],
+                //     [-1, 0, 0, -1, 0, 0],
+                //     [0, 0, 0, 0, 0, 0],
+                //     [0, 0, 0, 0, 0, 0],
+                //     [0, -1, 0, 0, -1, 0],
+                //     [0, 0, 0, 0, 0, 0]
+                // ]
+                let startX, startY;
+                let matrix = [];
+                for (let index = 0; index < this.dataSource.length; index++) {
+                    matrix[index] = [];
+                    for (let j = 0, len = Object.keys(this.dataSource[index]).length; j < len; j++) {
+                        if (this.dataSource[index][j + ''] === 1) {
+                            startX = index;
+                            startY = j;
+                        }
+                        matrix[index][j + ''] = this.dataSource[index][j];
+                    }
+                }
+                let instance = new unicursal();
+                instance.matrix = matrix;
+                // 起始位置 x:行数 y:列数
+                instance.x = startX;
+                instance.y = startY;
+                // 开始寻路
+                instance.run();
+
+                if (!instance.success) {
+                    this.errorMsg = "无路径可寻";
+                    this.dataSource2 = [];
+                } else {
+                    this.errorMsg = null;
+                    // 走到此，说明没有未走的格子，说明寻路成功，打印输出路径
+                    this.dataSource2 = [];
+                    for (let i = 0; i < instance.path.length; i++) {
+                        this.dataSource2[i] = {}
+                        for (let j = 0; j < instance.path[i].length; j++) {
+                            this.dataSource2[i][j + ''] = instance.path[i][j]
+                        }
+                    }
+                }
+            },
+            initTable() {
+                this.totalWidth = this.totalCol * 48 + 1 + 'px'
+                this.columns = []
+                for (let index = 0; index < this.totalCol; index++) {
+                    this.columns[index] = {dataIndex: index + ''};
+                }
+                this.dataSource = [];
+                for (let index = 0; index < this.totalRow; index++) {
+                    this.dataSource[index] = {};
+                    for (let j = 0; j < this.totalCol; j++) {
+                        this.dataSource[index][j + ''] = 0;
+                    }
+                    this.dataSource[index].key = index;
+                }
+            },
+            cellStyle({row, column, rowIndex, columnIndex}) {
+                if (row[columnIndex] === -1) {
+                    return "border:1px solid #F56C6C!important;border-radius:25px;"
+                } else if (row[columnIndex] === 1) {
+                    return "border:1px solid #67C23A!important;border-radius:25px;"
+                }
+            },
+            // 点击单元格显示输入框，并选中文本
+            cellClick(row, column, cell, event) {
+                this.cellClickRowIndex = row.key
+                this.cellClickColumnId = column.id
+                this.$nextTick(() => {
+                    this.$refs['cell-input-' + this.cellClickRowIndex + '-' + this.cellClickColumnId][0].focus()
+                })
+            },
+            // 失去焦点关闭输入框
+            inputBlur(row, event, column) {
+                this.cellClickRowIndex = null
+                this.cellClickColumnId = null
+            },
+        }
+    })
+</script>
+
+</html>
