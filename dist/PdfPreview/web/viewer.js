@@ -2248,6 +2248,7 @@ function webViewerInitialized() {
   fileInput.id = appConfig.openFileInputName;
   fileInput.className = "fileInput";
   fileInput.setAttribute("type", "file");
+  fileInput.setAttribute("accept", "application/pdf");
   fileInput.oncontextmenu = _ui_utils.noContextMenuHandler;
   document.body.appendChild(fileInput);
 
