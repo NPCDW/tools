@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OfficePreview</title>
+    <link rel="stylesheet" href="https://unpkg.zhimg.com/element-ui@2.15.6/lib/theme-chalk/index.css">
+    <script src="https://unpkg.zhimg.com/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://unpkg.zhimg.com/element-ui@2.15.6/lib/index.js"></script>
+</head>
+<body style="padding: 40px">
+<div id="el" style="text-align: center">
+    <div>
+        <el-input type="text" v-model="onlineUrl" style="width: 100%" ref="input" />
+    </div>
+    <div style="margin-top: 20px;height: 40px">
+        <el-switch v-model="encode" active-text="编码"></el-switch>
+    </div>
+    <div style="min-height: 100px;word-break: break-all;white-space: normal;">
+        {{ finalUrl }}
+    </div>
+    <p style="height: 100px">
+        <el-tag>微软在线预览</el-tag>
+        <a :href="'https://view.officeapps.live.com/op/view.aspx?src=' + finalUrl" target="_blank">
+            https://view.officeapps.live.com/op/view.aspx?src=
+        </a>
+    </p>
+    <p style="height: 100px">
+        <el-tag type="success">谷歌在线预览</el-tag>
+        <a :href="'https://docs.google.com/viewer?url=' + finalUrl" target="_blank">
+            https://docs.google.com/viewer?url=
+        </a>
+    </p>
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#el',
+        data() {
+            return {
+                onlineUrl: '',
+                encode: true,
+            }
+        },
+        mounted() {
+            this.$refs.input.focus()
+        },
+        computed: {
+            encodeOnlineUrl() {
+                return encodeURIComponent(this.onlineUrl)
+            },
+            finalUrl() {
+                return  this.encode ? this.encodeOnlineUrl : this.onlineUrl
+            }
+        },
+    })
+</script>
+</html>
