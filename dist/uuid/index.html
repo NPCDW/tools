@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UUID</title>
+    <link rel="stylesheet" href="https://unpkg.zhimg.com/element-ui@2.15.6/lib/theme-chalk/index.css">
+</head>
+<body>
+<div id="el">
+    <div style="width: 100%;text-align: center;font-size: 20px;margin-top: 100px">
+        {{ guid }}
+    </div>
+    <div style="width: 100%;text-align: center;font-size: 20px;margin-top: 10px">
+        <el-row>
+            <el-button @click="guid = generateGuid()" type="success" icon="el-icon-refresh" circle></el-button>
+            <el-button @click="copyText(guid)" type="primary" icon="el-icon-copy-document" circle></el-button>
+        </el-row>
+    </div>
+</div>
+</body>
+<script src="https://unpkg.zhimg.com/vue@2.6.14/dist/vue.js"></script>
+<script src="https://unpkg.zhimg.com/element-ui@2.15.6/lib/index.js"></script>
+<script>
+    new Vue({
+        el: '#el',
+        data() {
+            return {
+                guid: '',
+            }
+        },
+        methods: {
+            generateGuid() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                    var r = Math.random() * 16 | 0,
+                        v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            },
+            copyText(text) {
+                let input = document.createElement("input");
+                document.body.appendChild(input);
+                input.setAttribute('value', text);
+                input.select();
+                document.execCommand("copy");
+                document.body.removeChild(input);
+                this.$message.success('复制成功');
+            }
+        },
+        created() {
+            this.guid = this.generateGuid()
+        },
+    })
+</script>
+</html>
