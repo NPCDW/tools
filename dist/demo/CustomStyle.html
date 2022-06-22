@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>自定义样式</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/theme-chalk/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/index.js"></script>
+</head>
+<body>
+<div id="el" style="width: 90%; margin: auto; margin-top: 50px">
+    <div :style="moduleStyle">
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p v-for="i in 10" :key="i">测试文本测试文本测试文本测试文本</p>
+    </div>
+    <div :style="moduleStyle2">
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p v-for="i in 10" :key="i">测试文本测试文本测试文本测试文本测试文本</p>
+    </div>
+    <div :style="moduleStyle3">
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
+        <p v-for="i in 10" :key="i">测试文本测试文本测试文本测试文本</p>
+    </div>
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#el',
+        data() {
+            return {
+                moduleStyle: {
+                    'background-color': '#8cc5ff',
+                    'font-size': '14px',
+                    width: '350px',
+                    height: '450px',
+                    margin: '20px',
+                    display: 'inline-block',
+                    overflow: 'hidden'
+                },
+                moduleStyle2: {
+                    'background-color': '#8cc5ff',
+                    'font-size': '14px',
+                    width: '350px',
+                    height: '450px',
+                    margin: '20px',
+                    display: 'inline-block',
+                    overflow: 'hidden'
+                },
+                moduleStyle3: {
+                    'background-color': '#8cc5ff',
+                    'font-size': '14px',
+                    width: '350px',
+                    height: '450px',
+                    margin: '20px',
+                    display: 'inline-block',
+                    overflow: 'hidden'
+                }
+            }
+        },
+        mounted() {
+            this.$message.info({
+                message: '加载数据中',
+                duration: 4000,
+                onClose: this.getDataAndStyle
+            })
+        },
+        methods: {
+            getDataAndStyle() {
+                this.moduleStyle = Object.assign(this.moduleStyle, {
+                    'background-color': 'dodgerblue',
+                    'font-size': '12px',
+                    width: '350px',
+                    height: '350px',
+                })
+                this.moduleStyle3 = Object.assign(this.moduleStyle3, {
+                    'background-color': 'hotpink',
+                    'font-size': '16px',
+                    width: '400px',
+                    height: '400px',
+                })
+            }
+        }
+    })
+</script>
+</html>
