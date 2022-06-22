@@ -9,33 +9,33 @@
 </head>
 <body>
 <div id="el" style="width: 90%; margin: auto; margin-top: 50px">
-    <div :style="moduleStyle">
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p v-for="i in 10" :key="i">测试文本测试文本测试文本测试文本</p>
-    </div>
-    <div :style="moduleStyle2">
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p v-for="i in 10" :key="i">测试文本测试文本测试文本测试文本测试文本</p>
-    </div>
-    <div :style="moduleStyle3">
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p>测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本</p>
-        <p v-for="i in 10" :key="i">测试文本测试文本测试文本测试文本</p>
-    </div>
+    <el-card :style="moduleStyle">
+        <div slot="header" class="clearfix">
+            <span>卡片名称一</span>
+            <el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
+        </div>
+        <div v-for="o in 4" :key="o" class="text item">
+            测试文本测试文本测试文本测试文本
+        </div>
+    </el-card>
+    <el-card :style="moduleStyle2">
+        <div slot="header" class="clearfix">
+            <span>卡片名称二</span>
+            <el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
+        </div>
+        <div v-for="o in 10" :key="o" class="text item">
+            测试文本测试文本测试文本测试文本
+        </div>
+    </el-card>
+    <el-card :style="moduleStyle3">
+        <div slot="header" class="clearfix">
+            <span>卡片名称三</span>
+            <el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
+        </div>
+        <div v-for="o in 8" :key="o" class="text item">
+            测试文本测试文本测试文本测试文本
+        </div>
+    </el-card>
 </div>
 </body>
 <script>
@@ -84,8 +84,8 @@
                 this.moduleStyle = Object.assign(this.moduleStyle, {
                     'background-color': 'dodgerblue',
                     'font-size': '12px',
-                    width: '350px',
-                    height: '350px',
+                    width: '250px',
+                    height: '250px',
                 })
                 this.moduleStyle3 = Object.assign(this.moduleStyle3, {
                     'background-color': 'hotpink',
