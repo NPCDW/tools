@@ -12,10 +12,16 @@
             {{ guid }}
         </div>
         <div style="width: 100%;text-align: center;font-size: 20px;margin-top: 10px">
+            <el-radio-group v-model="caseSensitive">
+                <el-radio-button label="A"></el-radio-button>
+                <el-radio-button label="a"></el-radio-button>
+            </el-radio-group>
+            <el-checkbox v-model="separator" label="去分隔符" border></el-checkbox>
+        </div>
+        <div style="width: 100%;text-align: center;font-size: 20px;margin-top: 10px">
             <el-row>
-                <el-button @click="guid = generateGuid()" type="success" icon="el-icon-refresh" title="重新生成" circle></el-button>
+                <el-button @click="generateGuid()" type="success" icon="el-icon-refresh" title="重新生成" circle></el-button>
                 <el-button @click="copyText(guid)" type="primary" icon="el-icon-copy-document" title="复制" circle></el-button>
-                <el-button @click="copyText(guid.replaceAll('-', ''))" type="primary" icon="el-icon-minus" title="去分隔符复制" circle></el-button>
             </el-row>
         </div>
     </div>
@@ -41,6 +47,8 @@
         el: '#el',
         data() {
             return {
+                caseSensitive: "a",
+                separator: false,
                 guid: '',
                 snowflakeId: '',
                 snowflake: new Snowflake(),
@@ -48,11 +56,13 @@
         },
         methods: {
             generateGuid() {
-                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                this.guid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                     let r = Math.random() * 16 | 0,
                         v = c === 'x' ? r : (r & 0x3 | 0x8);
                     return v.toString(16);
                 });
+                this.caseSensitiveHandle(this.caseSensitive)
+                this.separatorHandle(this.separator)
             },
             copyText(text) {
                 let input = document.createElement("input");
@@ -63,9 +73,39 @@
                 document.body.removeChild(input);
                 this.$message.success('复制成功');
             },
+            caseSensitiveHandle(value) {
+                if (value === 'A') {
+                    this.guid = this.guid.toUpperCase()
+                } else {
+                    this.guid = this.guid.toLowerCase()
+                }
+            },
+            separatorHandle(value) {
+                if (value) {
+                    this.guid = this.guid.replaceAll('-', '')
+                } else {
+                    if (this.guid.indexOf('-') === -1) {
+                        this.guid = this.insertStr(8, this.guid, '-')
+                        this.guid = this.insertStr(13, this.guid, '-')
+                        this.guid = this.insertStr(18, this.guid, '-')
+                        this.guid = this.insertStr(23, this.guid, '-')
+                    }
+                }
+            },
+            insertStr(pos, str, newStr) {
+                return str.slice(0, pos) + newStr + str.slice(pos);
+            }
+        },
+        watch: {
+            caseSensitive(value) {
+                this.caseSensitiveHandle(value)
+            },
+            separator(value) {
+                this.separatorHandle(value)
+            },
         },
         created() {
-            this.guid = this.generateGuid()
+            this.generateGuid()
             this.snowflakeId = this.snowflake.nextId();
         },
     })
