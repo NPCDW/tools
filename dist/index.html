@@ -5,89 +5,98 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>实用工具合集</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/theme-chalk/index.css">
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/index.js"></script>
+    <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css" />
+    <script src="//unpkg.com/vue@next"></script>
+    <script src="//unpkg.com/element-plus"></script>
+    <script src="//unpkg.com/@element-plus/icons-vue"></script>
+    <style>
+        .layout-container-demo .el-menu {
+            border-right: none;
+        }
+    </style>
 </head>
-<body style="min-height: 100vh; margin: 0; padding: 0;">
-<div id="el">
-    <div style="padding: 40px;text-align: center">
-        <div style="width: 100%;text-align: center">离线功能</div>
-        <button onclick="location.href='Unicursal/'" style="border: #98e591 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: lightseagreen;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, #98e591);">
-            一笔画寻路
-        </button>
-        <button onclick="location.href='HtmlDiff/'" style="border: pink 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: hotpink;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, pink);">
-            HTML文本比对
-        </button>
-        <button onclick="location.href='ImageCompression/'" style="border: rgb(255, 255, 0) 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: goldenrod;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, rgb(255, 255, 0));">
-            图片压缩
-        </button>
-        <button onclick="location.href='pdf2img/'" style="border: deepskyblue 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: #ffffff;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, deepskyblue);">
-            PDF转图片
-        </button>
-        <button onclick="location.href='img2pdf/'" style="border: lightseagreen 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: darkcyan;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, lightseagreen);">
-            图片转PDF
-        </button>
-        <button onclick="location.href='PdfPreview/web/viewer.html?file='" style="border: darkorange 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: brown;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, darkorange);">
-            PDF预览
-        </button>
-        <button onclick="location.href='uuid/'" style="border: cadetblue 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: slateblue;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, cadetblue);">
-            UUID
-        </button>
-    </div>
+<body style="margin: 0; padding: 0;">
+<div id="app">
+    <el-container class="layout-container-demo" style="height: 100vh">
+        <el-aside width="300px">
+            <el-scrollbar>
+                <el-menu :default-openeds="['1', '2', '3']">
+                    <el-sub-menu index="1">
+                        <template #title>
+                            <el-icon><Compass /></el-icon>离线功能
+                        </template>
+                        <el-menu-item index="1-1" @click="menuItemClick('Unicursal/')">一笔画寻路</el-menu-item>
+                        <el-menu-item index="1-2" @click="menuItemClick('HtmlDiff/')">HTML文本比对</el-menu-item>
+                        <el-menu-item index="1-3" @click="menuItemClick('ImageCompression/')">图片压缩</el-menu-item>
+                        <el-menu-item index="1-4" @click="menuItemClick('pdf2img/')">PDF转图片</el-menu-item>
+                        <el-menu-item index="1-5" @click="menuItemClick('img2pdf/')">图片转PDF</el-menu-item>
+                        <el-menu-item index="1-6" @click="menuItemClick('PdfPreview/web/viewer.html?file=')">PDF预览</el-menu-item>
+                        <el-menu-item index="1-7" @click="menuItemClick('uuid/')">UUID</el-menu-item>
+                    </el-sub-menu>
+                    <el-sub-menu index="2">
+                        <template #title>
+                            <el-icon><Platform /></el-icon>在线功能
+                        </template>
+                        <el-menu-item index="2-1" @click="menuItemClick('ocr/')">文字识别</el-menu-item>
+                    </el-sub-menu>
+                    <el-sub-menu index="3">
+                        <template #title>
+                            <el-icon><Promotion /></el-icon>网站推荐
+                        </template>
+                        <el-menu-item index="3-1" @click="menuItemClick('tts/')">文本转语音</el-menu-item>
+                        <el-menu-item index="3-2" @click="menuItemClick('OfficePreview/')">Office预览</el-menu-item>
+                    </el-sub-menu>
+                </el-menu>
+            </el-scrollbar>
+        </el-aside>
 
-    <div style="padding: 40px;text-align: center">
-        <div style="width: 100%;text-align: center">在线功能</div>
-        <button onclick="location.href='ocr/'" style="border: chartreuse 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: forestgreen;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, chartreuse);">
-            文字识别
-        </button>
-    </div>
-
-    <div style="padding: 40px;text-align: center">
-        <div style="width: 100%;text-align: center">网站推荐</div>
-        <button onclick="location.href='tts/'" style="border: blue 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: aliceblue;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, blue);">
-            文本转语音
-        </button>
-        <button onclick="location.href='OfficePreview/'" style="border: tomato 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: crimson;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, tomato);">
-            Office预览
-        </button>
-    </div>
+        <el-container>
+            <el-main style="padding: 0">
+                <el-scrollbar>
+                    <iframe id="iframe" :src="iframeSrc" style="height: 100vh" width="100%" frameborder="0"></iframe>
+                </el-scrollbar>
+            </el-main>
+        </el-container>
+    </el-container>
 
     <div style="position:fixed; width: 40px; height: 100px; bottom: 40px; right: 40px">
         <el-popover
                 placement="top"
                 title="建议和反馈"
-                width="200"
+                :width="200"
                 trigger="click">
+            <template #reference>
+                <img src="image/suggest.svg" title="建议和反馈" style="width: 40px; margin-bottom: 20px">
+            </template>
             <div>
                 您有任何想法建议、使用困惑或者Bug反馈，都可以发送邮件到<br/>
                 <el-link type="primary" title="点击复制" @click="copyText('chenyongli0520@qq.com')">chenyongli0520@qq.com</el-link><br/>
                 我会尽快回复您
             </div>
-            <img slot="reference" src="image/suggest.svg" title="建议和反馈" style="width: 40px; margin-bottom: 20px">
         </el-popover>
         <el-popover
                 placement="left"
                 title="赞赏"
-                width="200"
+                :width="200"
                 trigger="click"
-                v-model="supportVisible"
-        >
+                v-model:visible="supportVisible">
+            <template #reference>
+                <img src="image/love.svg" alt="" title="赞赏" @click="supportVisible = !supportVisible" style="width: 40px;">
+            </template>
             <div>
                 <div style="text-indent:2em">您想请我喝杯奶茶吗？</div>
                 <div style="text-align: right; margin: 0">
-                    <el-button size="mini" type="text" @click="supportVisible = false">我拒绝</el-button>
-                    <el-button type="primary" size="mini" @click="supportVisible = false;supportDialogVisible = true">好啊</el-button>
+                    <el-button size="small" :text="true" @click="supportVisible = false">我不想</el-button>
+                    <el-button type="primary" size="small" @click="supportVisible = false;supportDialogVisible = true">好啊</el-button>
                 </div>
             </div>
-            <img slot="reference" src="image/love.svg" alt="" title="赞赏" style="width: 40px;">
         </el-popover>
     </div>
 
     <el-dialog
             title="赞赏"
-            :visible.sync="supportDialogVisible"
-            width="70%">
+            v-model="supportDialogVisible"
+            width="1310px">
         <div style="display: flex">
             <div style="flex: 1;text-align: left">
                 <img :src="supportDialogVisible ? 'image/pay/alipay.jpg' : ''" style="height: 520px;border-radius: 20px"/>
@@ -111,13 +120,17 @@
 </div>
 </body>
 <script>
-    new Vue({
-        el: '#el',
+    const app = Vue.createApp({
         data() {
             return {
+                iframeSrc: '',
                 supportVisible: false,
                 supportDialogVisible: false
             }
+        },
+        created() {
+            this.hashChangeFire()
+            window.addEventListener('hashchange', this.hashChangeFire, false);
         },
         methods: {
             copyText(text) {
@@ -131,9 +144,22 @@
                     title: '已复制',
                     message: '邮件地址复制成功',
                 });
+            },
+            menuItemClick(hash) {
+                location.hash = hash
+            },
+            hashChangeFire(){
+                if (location.hash) {
+                    this.iframeSrc = location.hash.slice(1)
+                }
             }
         }
     })
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component)
+    }
+    app.mount('#app')
 </script>
 <!--百度统计-->
 <script>

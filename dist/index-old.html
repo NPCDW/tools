@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实用工具合集</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/theme-chalk/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/index.js"></script>
+</head>
+<body style="min-height: 100vh; margin: 0; padding: 0;">
+<div id="el">
+    <div style="padding: 40px;text-align: center">
+        <div style="width: 100%;text-align: center">离线功能</div>
+        <button onclick="location.href='Unicursal/'" style="border: #98e591 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: lightseagreen;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, #98e591);">
+            一笔画寻路
+        </button>
+        <button onclick="location.href='HtmlDiff/'" style="border: pink 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: hotpink;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, pink);">
+            HTML文本比对
+        </button>
+        <button onclick="location.href='ImageCompression/'" style="border: rgb(255, 255, 0) 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: goldenrod;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, rgb(255, 255, 0));">
+            图片压缩
+        </button>
+        <button onclick="location.href='pdf2img/'" style="border: deepskyblue 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: #ffffff;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, deepskyblue);">
+            PDF转图片
+        </button>
+        <button onclick="location.href='img2pdf/'" style="border: lightseagreen 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: darkcyan;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, lightseagreen);">
+            图片转PDF
+        </button>
+        <button onclick="location.href='PdfPreview/web/viewer.html?file='" style="border: darkorange 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: brown;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, darkorange);">
+            PDF预览
+        </button>
+        <button onclick="location.href='uuid/'" style="border: cadetblue 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: slateblue;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, cadetblue);">
+            UUID
+        </button>
+    </div>
+
+    <div style="padding: 40px;text-align: center">
+        <div style="width: 100%;text-align: center">在线功能</div>
+        <button onclick="location.href='ocr/'" style="border: chartreuse 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: forestgreen;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, chartreuse);">
+            文字识别
+        </button>
+    </div>
+
+    <div style="padding: 40px;text-align: center">
+        <div style="width: 100%;text-align: center">网站推荐</div>
+        <button onclick="location.href='tts/'" style="border: blue 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: aliceblue;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, blue);">
+            文本转语音
+        </button>
+        <button onclick="location.href='OfficePreview/'" style="border: tomato 1px solid;border-radius: 10px;padding: 10px;width: 150px;color: crimson;margin: 10px;text-align: center;background-image: linear-gradient(to bottom right, #ffffff, tomato);">
+            Office预览
+        </button>
+    </div>
+
+    <div style="position:fixed; width: 40px; height: 100px; bottom: 40px; right: 40px">
+        <el-popover
+                placement="top"
+                title="建议和反馈"
+                width="200"
+                trigger="click">
+            <div>
+                您有任何想法建议、使用困惑或者Bug反馈，都可以发送邮件到<br/>
+                <el-link type="primary" title="点击复制" @click="copyText('chenyongli0520@qq.com')">chenyongli0520@qq.com</el-link><br/>
+                我会尽快回复您
+            </div>
+            <img slot="reference" src="image/suggest.svg" title="建议和反馈" style="width: 40px; margin-bottom: 20px">
+        </el-popover>
+        <el-popover
+                placement="left"
+                title="赞赏"
+                width="200"
+                trigger="click"
+                v-model="supportVisible"
+        >
+            <div>
+                <div style="text-indent:2em">您想请我喝杯奶茶吗？</div>
+                <div style="text-align: right; margin: 0">
+                    <el-button size="mini" type="text" @click="supportVisible = false">我拒绝</el-button>
+                    <el-button type="primary" size="mini" @click="supportVisible = false;supportDialogVisible = true">好啊</el-button>
+                </div>
+            </div>
+            <img slot="reference" src="image/love.svg" alt="" title="赞赏" style="width: 40px;">
+        </el-popover>
+    </div>
+
+    <el-dialog
+            title="赞赏"
+            :visible.sync="supportDialogVisible"
+            width="70%">
+        <div style="display: flex">
+            <div style="flex: 1;text-align: left">
+                <img :src="supportDialogVisible ? 'image/pay/alipay.jpg' : ''" style="height: 520px;border-radius: 20px"/>
+            </div>
+            <div style="flex: 1;text-align: center">
+                <img :src="supportDialogVisible ? 'image/pay/redpacket.jpg' : ''" style="height: 520px"/>
+            </div>
+            <div style="flex: 1;text-align: right">
+                <img :src="supportDialogVisible ? 'image/pay/wechatpay.png' : ''" style="height: 520px;border-radius: 20px"/>
+            </div>
+        </div>
+    </el-dialog>
+
+    <div style="position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 12px;">
+        <span>Copyright © HermitNpc 版权所有 | </span>
+        <a href="https://beian.miit.gov.cn/" target="_blank" style="text-decoration: none; color: black">鲁ICP备2021046019号-1</a>
+        <span> | </span>
+        <img src="image/beian.png" alt="" srcset="" style="margin-bottom: -5px">
+        <a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11011402012150" target="_blank" style="text-decoration: none; color: black">京公网安备11011402012150号</a>
+    </div>
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#el',
+        data() {
+            return {
+                supportVisible: false,
+                supportDialogVisible: false
+            }
+        },
+        methods: {
+            copyText(text) {
+                let input = document.createElement("input");
+                document.body.appendChild(input);
+                input.setAttribute('value', text);
+                input.select();
+                document.execCommand("copy");
+                document.body.removeChild(input);
+                this.$notify.success({
+                    title: '已复制',
+                    message: '邮件地址复制成功',
+                });
+            }
+        }
+    })
+</script>
+<!--百度统计-->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?7363c32345af2620215d2f8b39b05c6d";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+</html>
