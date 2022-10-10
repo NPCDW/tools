@@ -169,7 +169,7 @@ const defaultOptions = {
     kind: OptionKind.API
   },
   cMapUrl: {
-    value: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.12.313/cmaps/",
+    value: "./cmaps/",
     kind: OptionKind.API
   },
   disableAutoFetch: {
@@ -225,7 +225,7 @@ const defaultOptions = {
     kind: OptionKind.WORKER
   },
   workerSrc: {
-    value: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.12.313/build/pdf.worker.js",
+    value: "../build/pdf.worker.js",
     kind: OptionKind.WORKER
   }
 };
@@ -239,7 +239,7 @@ const defaultOptions = {
     kind: OptionKind.VIEWER
   };
   defaultOptions.sandboxBundleSrc = {
-    value: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.12.313/build/pdf.sandbox.js",
+    value: "../build/pdf.sandbox.js",
     kind: OptionKind.VIEWER
   };
   defaultOptions.renderer.kind += OptionKind.PREFERENCE;
@@ -3867,7 +3867,7 @@ let pdfjsLib;
 if (typeof window !== "undefined" && window["pdfjs-dist/build/pdf"]) {
   pdfjsLib = window["pdfjs-dist/build/pdf"];
 } else {
-  pdfjsLib = require("https://cdn.jsdelivr.net/npm/pdfjs-dist@2.12.313/build/pdf.js");
+  pdfjsLib = require("../build/pdf.js");
 }
 
 module.exports = pdfjsLib;
