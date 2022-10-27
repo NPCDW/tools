@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UUID</title>
+    <link rel="stylesheet" href="/lib/vue3/element-plus.index.css" />
+    <script src="/lib/vue3/vue-next.global.js"></script>
+    <script src="/lib/vue3/element-plus.index.full.js"></script>
+    <script src="/lib/vue3/element-plus.index.iife.min.js"></script>
+</head>
+<body>
+<div id="el">
+    <input v-model="text" />
+    <input v-model="text2" />
+    {{ ipv6_to_cidr(text, text2) }}
+</div>
+</body>
+<script>
+const app = Vue.createApp({
+    data() {
+        return {
+            text: '',
+            text2: '',
+        }
+    },
+    methods: {
+        ipv4_to_u32(ipv4) {
+            if (!ipv4) {
+                return -1;
+            }
+            let split = ipv4.split(".");
+            if (split.length !== 4) {
+                return -1;
+            }
+            let number = BigInt(parseInt(split[0]))
+            for (let i = 1; i < 4; i++) {
+                number = number << 8n;
+                number = number | BigInt(parseInt(split[i]));
+            }
+            return number;
+        },
+        ipv6_to_u128(ipv6) {
+            if (!ipv6) {
+                return -1;
+            }
+            if (ipv6.indexOf(".") !== -1) {
+                let ipv4 = ipv6.substring(ipv6.lastIndexOf(":") + 1);
+                return this.ipv4_to_u32(ipv4) | 0xffff_0000_0000n;
+            }
+            let split = ipv6.split(":");
+            while (true) {
+                let blank_pos = split.indexOf("");
+                if (blank_pos === -1) {
+                    break;
+                }
+                split[blank_pos] = 0;
+                while (split.length !== 8) {
+                    split.splice(blank_pos, 0, "0");
+                }
+            }
+            let number = BigInt('0x' + split[0]);
+            for (let i = 1; i < 8; i++) {
+                number = number << 16n;
+                number = number | BigInt('0x' + split[i]);
+            }
+            return number;
+        },
+        u32_to_ipv4(numberStr) {
+            if (numberStr == null) {
+                return "";
+            }
+            let number = BigInt(numberStr);
+            let arr = [];
+            for (let i = 3; i >= 0; i--) {
+                arr[i] = number & 0xffn;
+                number = number >> 8n;
+            }
+            return arr.join(".");
+        },
+        u128_to_ipv6(numberStr) {
+            if (numberStr == null) {
+                return "";
+            }
+            let number = BigInt(numberStr);
+            // if (number >= 0xffff_0000_0000n && number <= 0xffff_ffff_ffffn) {
+            //     return this.u32_to_ipv4(number & 0xffff_ffffn);
+            // }
+            let arr = [];
+            for (let i = 7; i >= 0; i--) {
+                arr[i] = (number & 0xffffn).toString(16);
+                number = number >> 16n;
+            }
+            return arr.join(":");
+        },
+        ipv4_to_ipv6(ipv4) {
+            if (!ipv4) {
+                return "";
+            }
+            let number = BigInt(this.ipv4_to_u32(ipv4));
+            return this.u128_to_ipv6(number | 0xffff_0000_0000n);
+        },
+        ipv6_to_ipv4(ipv6) {
+            if (!ipv6) {
+                return "";
+            }
+            let number = BigInt(this.ipv6_to_u128(ipv6));
+            return this.u32_to_ipv4(number & 0xffff_ffffn);
+        },
+        cidr_to_ipv4(cidr) {
+            if (!cidr) {
+                return {};
+            }
+            let split = cidr.split("/");
+            if (split.length !== 2) {
+                return {};
+            }
+            let ip = BigInt(this.ipv4_to_u32(split[0]));
+            let prefix = BigInt(split[1]);
+            let mask = BigInt(((1n << prefix) - 1n) << (32n - prefix));
+            let count = BigInt(1n << (32n - prefix));
+            return {
+                ip_start: this.u32_to_ipv4(ip & mask),
+                ip_end: this.u32_to_ipv4(ip | (count - 1n)),
+                mask: this.u32_to_ipv4(mask),
+                count: count.toString(),
+            }
+        },
+        cidr_to_ipv6(cidr) {
+            if (!cidr) {
+                return {};
+            }
+            let split = cidr.split("/");
+            if (split.length !== 2) {
+                return {};
+            }
+            let ip = BigInt(this.ipv6_to_u128(split[0]));
+            let prefix = BigInt(split[1]);
+            let mask = BigInt(((1n << prefix) - 1n) << (128n - prefix));
+            let count = BigInt(1n << (128n - prefix));
+            return {
+                ip_start: this.u128_to_ipv6(ip & mask),
+                ip_end: this.u128_to_ipv6(ip | (count - 1n)),
+                mask: this.u128_to_ipv6(mask),
+                count: count.toString(),
+            }
+        },
+        ipv4_to_cidr(ip_start_str, ip_end_str) {
+            if (!ip_start_str || !ip_end_str) {
+                return [];
+            }
+            let ip_start = BigInt(this.ipv4_to_u32(ip_start_str));
+            let ip_end = BigInt(this.ipv4_to_u32(ip_end_str));
+            if (ip_start > ip_end) {
+                return [];
+            }
+            let list = [];
+            while (true) {
+                let ip_start_b = ip_start.toString(2).padStart(32,'0');
+                let last_one_index = ip_start_b.lastIndexOf("1");
+                let prefix = BigInt(last_one_index + 1);
+                while (true) {
+                    let count = BigInt(1n << (32n - prefix));
+                    let ip_start_mask_max_ip = ip_start | (count - 1n);
+                    if (ip_start_mask_max_ip === ip_end) {
+                        let cidr = this.u32_to_ipv4(ip_start) + "/" + prefix.toString();
+                        list.push(cidr);
+                        return list;
+                    } else if (ip_start_mask_max_ip > ip_end) {
+                        prefix++;
+                    } else {
+                        let cidr = this.u32_to_ipv4(ip_start) + "/" + prefix.toString();
+                        list.push(cidr);
+                        ip_start = ip_start_mask_max_ip + 1n;
+                        break;
+                    }
+                }
+            }
+        },
+        ipv6_to_cidr(ip_start_str, ip_end_str) {
+            if (!ip_start_str || !ip_end_str) {
+                return [];
+            }
+            let ip_start = BigInt(this.ipv6_to_u128(ip_start_str));
+            let ip_end = BigInt(this.ipv6_to_u128(ip_end_str));
+            if (ip_start > ip_end) {
+                return [];
+            }
+            let list = [];
+            while (true) {
+                let ip_start_b = ip_start.toString(2).padStart(128,'0');
+                let last_one_index = ip_start_b.lastIndexOf("1");
+                let prefix = BigInt(last_one_index + 1);
+                while (true) {
+                    let count = BigInt(1n << (128n - prefix));
+                    let ip_start_mask_max_ip = ip_start | (count - 1n);
+                    if (ip_start_mask_max_ip === ip_end) {
+                        let cidr = this.u128_to_ipv6(ip_start) + "/" + prefix.toString();
+                        list.push(cidr);
+                        return list;
+                    } else if (ip_start_mask_max_ip > ip_end) {
+                        prefix++;
+                    } else {
+                        let cidr = this.u128_to_ipv6(ip_start) + "/" + prefix.toString();
+                        list.push(cidr);
+                        ip_start = ip_start_mask_max_ip + 1n;
+                        break;
+                    }
+                }
+            }
+        },
+    },
+})
+app.use(ElementPlus);
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+    app.component(key, component)
+}
+app.mount('#el')
+</script>
+</html>
