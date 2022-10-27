@@ -24,105 +24,119 @@
 <div id="el">
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="12">
-            <el-row>IPV4 / Number</el-row>
-            <el-row>
-                <el-input v-model="ipv4_1" placeholder="IPV4"></el-input>
-            </el-row>
-            <el-row justify="center">
-                <el-button type="primary" circle @click="number_1_1=ipv4_to_u32(ipv4_1)"><el-icon><Bottom /></el-icon></el-button>
-                <el-button type="primary" circle @click="ipv4_1=u32_to_ipv4(number_1_1)"><el-icon><Top /></el-icon></el-button>
-            </el-row>
-            <el-row>
-                <el-input v-model="number_1_1" placeholder="十进制"></el-input>
-            </el-row>
-            <el-row>
-                <el-input v-model="number_1_2" placeholder="二进制"></el-input>
-            </el-row>
+            <el-card class="box-card">
+                <el-row>IPV4 / Number</el-row>
+                <el-row>
+                    <el-input v-model="ipv4_1" placeholder="IPV4"></el-input>
+                </el-row>
+                <el-row justify="center">
+                    <el-button type="primary" circle @click="number_1_1=ipv4_to_u32(ipv4_1)"><el-icon><Bottom /></el-icon></el-button>
+                    <el-button type="primary" circle @click="ipv4_1=u32_to_ipv4(number_1_1)"><el-icon><Top /></el-icon></el-button>
+                </el-row>
+                <el-row>
+                    <el-input v-model="number_1_1" placeholder="十进制"></el-input>
+                </el-row>
+                <el-row>
+                    <el-input v-model="number_1_2" placeholder="二进制"></el-input>
+                </el-row>
+            </el-card>
         </el-col>
         <el-col :span="12">
-            <el-row>IPV6 / Number</el-row>
-            <el-row>
-                <el-input v-model="ipv6_2" placeholder="IPV6"></el-input>
-            </el-row>
-            <el-row justify="center">
-                <el-button type="primary" circle @click="number_2_1=ipv6_to_u128(ipv6_2)"><el-icon><Bottom /></el-icon></el-button>
-                <el-button type="primary" circle @click="ipv6_2=u128_to_ipv6(number_2_1)"><el-icon><Top /></el-icon></el-button>
-            </el-row>
-            <el-row>
-                <el-input v-model="number_2_1" placeholder="十进制"></el-input>
-            </el-row>
-            <el-row>
-                <el-input v-model="number_2_2" placeholder="二进制"></el-input>
-            </el-row>
+            <el-card class="box-card">
+                <el-row>IPV6 / Number</el-row>
+                <el-row>
+                    <el-input v-model="ipv6_2" placeholder="IPV6"></el-input>
+                </el-row>
+                <el-row justify="center">
+                    <el-button type="primary" circle @click="number_2_1=ipv6_to_u128(ipv6_2)"><el-icon><Bottom /></el-icon></el-button>
+                    <el-button type="primary" circle @click="ipv6_2=u128_to_ipv6(number_2_1)"><el-icon><Top /></el-icon></el-button>
+                </el-row>
+                <el-row>
+                    <el-input v-model="number_2_1" placeholder="十进制"></el-input>
+                </el-row>
+                <el-row>
+                    <el-input v-model="number_2_2" placeholder="二进制"></el-input>
+                </el-row>
+            </el-card>
         </el-col>
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="24">
-            <el-row>IPV4 / IPV6</el-row>
-            <el-row>
-                <el-input v-model="ipv4_3" placeholder="IPV4"></el-input>
-            </el-row>
-            <el-row justify="center">
-                <el-button type="primary" circle @click="ipv6_3=ipv4_to_ipv6(ipv4_3)"><el-icon><Bottom /></el-icon></el-button>
-                <el-button type="primary" circle @click="ipv4_3=ipv6_to_ipv4(ipv6_3)"><el-icon><Top /></el-icon></el-button>
-            </el-row>
-            <el-row>
-                <el-input v-model="ipv6_3" placeholder="IPV6"></el-input>
-            </el-row>
+            <el-card class="box-card">
+                <el-row>IPV4 / IPV6</el-row>
+                <el-row>
+                    <el-input v-model="ipv4_3" placeholder="IPV4"></el-input>
+                </el-row>
+                <el-row justify="center">
+                    <el-button type="primary" circle @click="ipv6_3=ipv4_to_ipv6(ipv4_3)"><el-icon><Bottom /></el-icon></el-button>
+                    <el-button type="primary" circle @click="ipv4_3=ipv6_to_ipv4(ipv6_3)"><el-icon><Top /></el-icon></el-button>
+                </el-row>
+                <el-row>
+                    <el-input v-model="ipv6_3" placeholder="IPV6"></el-input>
+                </el-row>
+            </el-card>
         </el-col>
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="12">
-            <el-row>IPV4 -> CIDR</el-row>
-            <el-row :gutter="20">
-                <el-col :span="12"><el-input v-model="ipv4_4_1" placeholder="START IPV4"></el-input></el-col>
-                <el-col :span="12"><el-input v-model="ipv4_4_2" placeholder="END IPV4"></el-input></el-col>
-            </el-row>
-            <el-row justify="center">
-                <el-button type="primary" circle @click="cidr_4=ipv4_to_cidr(ipv4_4_1, ipv4_4_2).join('\n')"><el-icon><Bottom /></el-icon></el-button>
-            </el-row>
-            <el-row>
-                <el-input :rows="6" readonly type="textarea" :value="cidr_4" placeholder="CIDR"></el-input>
-            </el-row>
+            <el-card class="box-card">
+                <el-row>IPV4 -> CIDR</el-row>
+                <el-row :gutter="20">
+                    <el-col :span="12"><el-input v-model="ipv4_4_1" placeholder="START IPV4"></el-input></el-col>
+                    <el-col :span="12"><el-input v-model="ipv4_4_2" placeholder="END IPV4"></el-input></el-col>
+                </el-row>
+                <el-row justify="center">
+                    <el-button type="primary" circle @click="cidr_4=ipv4_to_cidr(ipv4_4_1, ipv4_4_2).join('\n')"><el-icon><Bottom /></el-icon></el-button>
+                </el-row>
+                <el-row>
+                    <el-input :rows="6" readonly type="textarea" :value="cidr_4" placeholder="CIDR"></el-input>
+                </el-row>
+            </el-card>
         </el-col>
         <el-col :span="12">
-            <el-row>IPV6 -> CIDR</el-row>
-            <el-row :gutter="20">
-                <el-col :span="12"><el-input v-model="ipv6_5_1" placeholder="START IPV6"></el-input></el-col>
-                <el-col :span="12"><el-input v-model="ipv6_5_2" placeholder="END IPV6"></el-input></el-col>
-            </el-row>
-            <el-row justify="center">
-                <el-button type="primary" circle @click="cidr_5=ipv6_to_cidr(ipv6_5_1, ipv6_5_2).join('\n')"><el-icon><Bottom /></el-icon></el-button>
-            </el-row>
-            <el-row>
-                <el-input :rows="6" readonly type="textarea" :value="cidr_5" placeholder="CIDR"></el-input>
-            </el-row>
+            <el-card class="box-card">
+                <el-row>IPV6 -> CIDR</el-row>
+                <el-row :gutter="20">
+                    <el-col :span="12"><el-input v-model="ipv6_5_1" placeholder="START IPV6"></el-input></el-col>
+                    <el-col :span="12"><el-input v-model="ipv6_5_2" placeholder="END IPV6"></el-input></el-col>
+                </el-row>
+                <el-row justify="center">
+                    <el-button type="primary" circle @click="cidr_5=ipv6_to_cidr(ipv6_5_1, ipv6_5_2).join('\n')"><el-icon><Bottom /></el-icon></el-button>
+                </el-row>
+                <el-row>
+                    <el-input :rows="6" readonly type="textarea" :value="cidr_5" placeholder="CIDR"></el-input>
+                </el-row>
+            </el-card>
         </el-col>
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="12">
-            <el-row>CIDR -> IPV4</el-row>
-            <el-row>
-                <el-input v-model="cidr_6" placeholder="CIDR"></el-input>
-            </el-row>
-            <el-row justify="center">
-                <el-button type="primary" circle @click="cidr_info_6=JSON.stringify(cidr_to_ipv4(cidr_6), null, 4)"><el-icon><Bottom /></el-icon></el-button>
-            </el-row>
-            <el-row>
-                <el-input :rows="6" readonly type="textarea" :value="cidr_info_6"></el-input>
-            </el-row>
+            <el-card class="box-card">
+                <el-row>CIDR -> IPV4</el-row>
+                <el-row>
+                    <el-input v-model="cidr_6" placeholder="CIDR"></el-input>
+                </el-row>
+                <el-row justify="center">
+                    <el-button type="primary" circle @click="cidr_info_6=JSON.stringify(cidr_to_ipv4(cidr_6), null, 4)"><el-icon><Bottom /></el-icon></el-button>
+                </el-row>
+                <el-row>
+                    <el-input :rows="6" readonly type="textarea" :value="cidr_info_6"></el-input>
+                </el-row>
+            </el-card>
         </el-col>
         <el-col :span="12">
-            <el-row>CIDR -> IPV6</el-row>
-            <el-row>
-                <el-input v-model="cidr_7" placeholder="CIDR"></el-input>
-            </el-row>
-            <el-row justify="center">
-                <el-button type="primary" circle @click="cidr_info_7=JSON.stringify(cidr_to_ipv6(cidr_7), null, 4)"><el-icon><Bottom /></el-icon></el-button>
-            </el-row>
-            <el-row>
-                <el-input :rows="6" readonly type="textarea" :value="cidr_info_7"></el-input>
-            </el-row>
+            <el-card class="box-card">
+                <el-row>CIDR -> IPV6</el-row>
+                <el-row>
+                    <el-input v-model="cidr_7" placeholder="CIDR"></el-input>
+                </el-row>
+                <el-row justify="center">
+                    <el-button type="primary" circle @click="cidr_info_7=JSON.stringify(cidr_to_ipv6(cidr_7), null, 4)"><el-icon><Bottom /></el-icon></el-button>
+                </el-row>
+                <el-row>
+                    <el-input :rows="6" readonly type="textarea" :value="cidr_info_7"></el-input>
+                </el-row>
+            </el-card>
         </el-col>
     </el-row>
 </div>
