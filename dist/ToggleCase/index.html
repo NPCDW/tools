@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UUID</title>
+    <link rel="stylesheet" href="/lib/vue3/element-plus.index.css" />
+    <style>
+        .el-row {
+            margin-bottom: 20px;
+        }
+        .el-row:last-child {
+            margin-bottom: 0;
+        }
+        input, textarea {
+            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+        }
+    </style>
+    <script src="/lib/vue3/vue-next.global.js"></script>
+    <script src="/lib/vue3/element-plus.index.full.js"></script>
+    <script src="/lib/vue3/element-plus.index.iife.min.js"></script>
+</head>
+<body>
+<div id="el">
+    <el-card class="box-card">
+        <el-row>大小写转换</el-row>
+        <el-row>
+            <el-input v-model="src_str" placeholder="输入你想要转换的字符串">
+                <template #prepend>原字符串</template>
+            </el-input>
+        </el-row>
+        <el-row justify="center">
+            <el-button type="primary" circle><el-icon><Bottom /></el-icon></el-button>
+        </el-row>
+        <el-row>
+            <el-input v-model="target_str1" readonly placeholder="全部大写">
+                <template #prepend>全部大写</template>
+            </el-input>
+        </el-row>
+        <el-row>
+            <el-input v-model="target_str2" readonly placeholder="全部小写">
+                <template #prepend>全部小写</template>
+            </el-input>
+        </el-row>
+        <el-row>
+            <el-input v-model="target_str3" readonly placeholder="首字母大写">
+                <template #prepend>首字母大写</template>
+            </el-input>
+        </el-row>
+        <el-row>
+            <el-input v-model="target_str4" readonly placeholder="大小写反转">
+                <template #prepend>大小写反转</template>
+            </el-input>
+        </el-row>
+    </el-card>
+</div>
+</body>
+<script>
+const app = Vue.createApp({
+    data() {
+        return {
+            src_str: null
+        }
+    },
+    computed: {
+        target_str1() {
+            if (!this.src_str) {
+                return null;
+            }
+            return this.src_str.toUpperCase();
+        },
+        target_str2() {
+            if (!this.src_str) {
+                return null;
+            }
+            return this.src_str.toLowerCase();
+        },
+        target_str3() {
+            if (!this.src_str) {
+                return null;
+            }
+            return this.src_str.substring(0, 1).toUpperCase() + this.src_str.substring(1).toLowerCase();
+        },
+        target_str4() {
+            if (!this.src_str) {
+                return null;
+            }
+            let res = "";
+            for (let c of this.src_str) {
+                if (c >= 'a' && c <= 'z') {
+                    res += c.toUpperCase();
+                } else if (c >= 'A' && c <= 'Z') {
+                    res += c.toLowerCase();
+                } else {
+                    res += c;
+                }
+            }
+            return res;
+        },
+    },
+    methods: {
+    },
+    created() {
+    },
+})
+app.use(ElementPlus);
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+    app.component(key, component)
+}
+app.mount('#el')
+</script>
+</html>
