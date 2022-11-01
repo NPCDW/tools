@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UUID</title>
+    <link rel="stylesheet" href="/lib/vue3/element-plus.index.css" />
+    <style>
+        .el-row {
+            margin-bottom: 20px;
+        }
+        .el-row:last-child {
+            margin-bottom: 0;
+        }
+        input, textarea {
+            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+        }
+    </style>
+    <script src="/lib/vue3/vue-next.global.js"></script>
+    <script src="/lib/vue3/element-plus.index.full.js"></script>
+    <script src="/lib/vue3/element-plus.index.iife.min.js"></script>
+    <script src="/lib/crypto-js-4.1.1/crypto-js.js"></script>
+</head>
+<body>
+<div id="el">
+    <el-card class="box-card" style="margin-top: 8px">
+        <el-row align="middle">
+            <span>编解码</span>
+            <el-radio-group v-model="message_digest_radio" size="small" style="margin-left: 20px">
+                <el-radio label="hash" border>Hashing</el-radio>
+                <el-radio label="hmac" border>HMAC</el-radio>
+            </el-radio-group>
+            <el-input v-model="message_digest_key" v-show="message_digest_key_show" placeholder="输入加密秘钥" style="width: 350px;margin-left: 20px;height: 24px">
+                <template #prepend>Key</template>
+            </el-input>
+        </el-row>
+        <el-row>
+            <el-input v-model="message_digest_src_str" placeholder="输入你想要加密的字符串">
+                <template #prepend>原字符串</template>
+            </el-input>
+        </el-row>
+        <el-row>
+            <el-input v-model="message_digest_md5_str" readonly placeholder="MD5 加密字符串">
+                <template #prepend>MD5</template>
+            </el-input>
+        </el-row>
+        <el-row>
+            <el-input v-model="message_digest_sha1_str" readonly placeholder="SHA1 加密字符串">
+                <template #prepend>SHA1</template>
+            </el-input>
+        </el-row>
+        <el-row>
+            <el-input v-model="message_digest_sha256_str" readonly placeholder="SHA256 加密字符串">
+                <template #prepend>SHA256</template>
+            </el-input>
+        </el-row>
+        <el-row>
+            <el-input v-model="message_digest_sha3_str" readonly placeholder="SHA3 加密字符串">
+                <template #prepend>SHA3</template>
+            </el-input>
+        </el-row>
+    </el-card>
+    <el-card class="box-card" style="margin-top: 8px">
+        <el-row align="middle">
+            <span>编解码</span>
+            <el-radio-group v-model="encoded_radio" size="small" style="margin-left: 20px">
+                <el-radio label="base64" border>BASE64</el-radio>
+                <el-radio label="url" border>URL</el-radio>
+                <el-radio label="hex" border>HEX</el-radio>
+            </el-radio-group>
+        </el-row>
+        <el-row>
+            <el-input v-model="message_digest_src_str" placeholder="输入你想要转换的字符串">
+                <template #prepend>原字符串</template>
+            </el-input>
+        </el-row>
+    </el-card>
+    <el-card class="box-card" style="margin-top: 8px">
+        <el-row>对称加解密</el-row>
+        <el-row>
+            <el-input v-model="message_digest_src_str" placeholder="输入你想要转换的字符串">
+                <template #prepend>原字符串</template>
+            </el-input>
+        </el-row>
+    </el-card>
+    <el-card class="box-card" style="margin-top: 8px">
+        <el-row>非对称加解密</el-row>
+        <el-row>
+            <el-input v-model="message_digest_src_str" placeholder="输入你想要转换的字符串">
+                <template #prepend>原字符串</template>
+            </el-input>
+        </el-row>
+    </el-card>
+</div>
+</body>
+<script>
+const app = Vue.createApp({
+    data() {
+        return {
+            message_digest_src_str: '',
+            message_digest_key: '',
+            message_digest_radio: 'hash',
+            encoded_radio: 'base64',
+        }
+    },
+    computed: {
+        message_digest_key_show() {
+            return this.message_digest_radio === 'hmac';
+        },
+        message_digest_md5_str() {
+            if (this.message_digest_key_show) {
+                return CryptoJS.HmacMD5(this.message_digest_src_str, this.message_digest_key);
+            }
+            return CryptoJS.MD5(this.message_digest_src_str);
+        },
+        message_digest_sha1_str() {
+            if (this.message_digest_key_show) {
+                return CryptoJS.HmacSHA1(this.message_digest_src_str, this.message_digest_key);
+            }
+            return CryptoJS.SHA1(this.message_digest_src_str);
+        },
+        message_digest_sha256_str() {
+            if (this.message_digest_key_show) {
+                return CryptoJS.HmacSHA256(this.message_digest_src_str, this.message_digest_key);
+            }
+            return CryptoJS.SHA256(this.message_digest_src_str);
+        },
+        message_digest_sha3_str() {
+            if (this.message_digest_key_show) {
+                return CryptoJS.HmacSHA3(this.message_digest_src_str, this.message_digest_key);
+            }
+            return CryptoJS.SHA3(this.message_digest_src_str);
+        },
+    },
+    methods: {
+    },
+    created() {
+    },
+    watch: {
+    }
+})
+app.use(ElementPlus);
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+    app.component(key, component)
+}
+app.mount('#el')
+</script>
+</html>
