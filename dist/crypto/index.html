@@ -5,6 +5,13 @@
     <title>UUID</title>
     <link rel="stylesheet" href="/lib/vue3/element-plus.index.css" />
     <style>
+        .el-upload-dragger {
+            width: 100%;
+            height: 32px;
+            padding: 0;
+            margin: 0;
+            background-color: #f5f7fa;
+        }
         .el-row {
             margin-bottom: 20px;
         }
@@ -24,7 +31,7 @@
 <div id="el">
     <el-card class="box-card" style="margin-top: 8px">
         <el-row align="middle">
-            <span>编解码</span>
+            <span>信息摘要</span>
             <el-radio-group v-model="message_digest_radio" size="small" style="margin-left: 20px">
                 <el-radio label="hash" border>Hashing</el-radio>
                 <el-radio label="hmac" border>HMAC</el-radio>
@@ -36,6 +43,16 @@
         <el-row>
             <el-input v-model="message_digest_src_str" placeholder="输入你想要加密的字符串">
                 <template #prepend>原字符串</template>
+                <template #append>
+                    <el-upload
+                            action="#"
+                            :on-change="on_message_digest_file_change"
+                            :show-file-list="false"
+                            :limit="1"
+                            :auto-upload="false">
+                        <span>选择文件</span>
+                    </el-upload>
+                </template>
             </el-input>
         </el-row>
         <el-row>
@@ -132,6 +149,18 @@ const app = Vue.createApp({
         },
     },
     methods: {
+        on_message_digest_file_change(uploadFile) {
+            console.log(uploadFile);
+            let reader = new FileReader();
+            reader.readAsBinaryString(uploadFile.raw);
+            reader.onloadend = () => {
+                let hash = CryptoJS.MD5(reader.result).toString();
+                // // or CryptoJS.SHA256(reader.result).toString(); for SHA-2
+                // console.log("MD5 Checksum", hash);
+                // callback(hash);
+                console.log(hash)
+            };
+        },
     },
     created() {
     },
