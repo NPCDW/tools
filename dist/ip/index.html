@@ -23,7 +23,7 @@
 </head>
 <body>
 <div id="el">
-    <el-row :gutter="20" style="margin-top: 20px">
+    <el-row :gutter="20">
         <el-col :span="12">
             <el-card class="box-card" title="Powered by https://www.ipify.org/">
                 您的IPV4：<span v-loading="your_ipv4_loading">{{ your_ipv4 }}</span>
@@ -35,7 +35,7 @@
             </el-card>
         </el-col>
     </el-row>
-    <el-row :gutter="20" style="margin-top: 20px">
+    <el-row :gutter="20">
         <el-col :span="12">
             <el-card class="box-card">
                 <el-row>IPV4 / Number</el-row>
