@@ -70,27 +70,32 @@
             </el-radio-group>
         </el-row>
         <el-row>
-            <el-input v-model="message_digest_src_str" placeholder="输入你想要转换的字符串">
-                <template #prepend>原字符串</template>
-            </el-input>
+            <el-input v-model="encode_src_str" type="textarea" placeholder="输入你想要编码的字符串"></el-input>
         </el-row>
-    </el-card>
-    <el-card class="box-card" style="margin-top: 8px">
-        <el-row>对称加解密</el-row>
+        <el-row justify="center">
+            <el-button type="primary" circle @click="encode_src()"><el-icon><Bottom /></el-icon></el-button>
+            <el-button type="primary" circle @click="decode_src()"><el-icon><Top /></el-icon></el-button>
+        </el-row>
         <el-row>
-            <el-input v-model="message_digest_src_str" placeholder="输入你想要转换的字符串">
-                <template #prepend>原字符串</template>
-            </el-input>
+            <el-input v-model="decode_src_str" type="textarea" placeholder="输入你想要解码的字符串"></el-input>
         </el-row>
     </el-card>
-    <el-card class="box-card" style="margin-top: 8px">
-        <el-row>非对称加解密</el-row>
-        <el-row>
-            <el-input v-model="message_digest_src_str" placeholder="输入你想要转换的字符串">
-                <template #prepend>原字符串</template>
-            </el-input>
-        </el-row>
-    </el-card>
+<!--    <el-card class="box-card" style="margin-top: 8px">-->
+<!--        <el-row>对称加解密</el-row>-->
+<!--        <el-row>-->
+<!--            <el-input v-model="message_digest_src_str" placeholder="输入你想要转换的字符串">-->
+<!--                <template #prepend>原字符串</template>-->
+<!--            </el-input>-->
+<!--        </el-row>-->
+<!--    </el-card>-->
+<!--    <el-card class="box-card" style="margin-top: 8px">-->
+<!--        <el-row>非对称加解密</el-row>-->
+<!--        <el-row>-->
+<!--            <el-input v-model="message_digest_src_str" placeholder="输入你想要转换的字符串">-->
+<!--                <template #prepend>原字符串</template>-->
+<!--            </el-input>-->
+<!--        </el-row>-->
+<!--    </el-card>-->
 </div>
 </body>
 <script>
@@ -101,6 +106,8 @@ const app = Vue.createApp({
             message_digest_key: '',
             message_digest_radio: 'hash',
             encoded_radio: 'base64',
+            encode_src_str: '',
+            decode_src_str: '',
         }
     },
     computed: {
@@ -133,6 +140,25 @@ const app = Vue.createApp({
         },
     },
     methods: {
+        encode_src() {
+            let data = CryptoJS.enc.Utf8.parse(this.encode_src_str);
+            switch (this.encoded_radio) {
+                case "base64":
+                    this.decode_src_str = CryptoJS.enc.Base64.stringify(data);
+                    break;
+                case "url": this.decode_src_str = encodeURIComponent(this.encode_src_str); break;
+                case "hex":
+                    this.decode_src_str = CryptoJS.enc.Hex.stringify(data);
+                    break;
+            }
+        },
+        decode_src() {
+            switch (this.encoded_radio) {
+                case "base64": this.encode_src_str = CryptoJS.enc.Base64.parse(this.decode_src_str).toString(CryptoJS.enc.Utf8); break;
+                case "url": this.encode_src_str = decodeURIComponent(this.decode_src_str); break;
+                case "hex": this.encode_src_str = CryptoJS.enc.Hex.parse(this.decode_src_str).toString(CryptoJS.enc.Utf8); break;
+            }
+        },
     },
     created() {
     },
