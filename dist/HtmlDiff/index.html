@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <title>Demo of Html Diff</title>
+    <link rel="stylesheet" href="/lib/vue3/element-plus.index.css" />
+    <link rel="stylesheet" href="/lib/vue3/element-plus.css-vars.css" />
     <style>
         ins {
             color: green;
@@ -21,7 +23,7 @@
     <table width="100%">
         <tr>
             <td width="50%">
-              <textarea style="width:100%;height: 200px;border: #60bd90 1px solid" id="oldHtml">
+              <textarea style="width:100%;height: 200px;" id="oldHtml">
                 <div>Hamlet: Do you see yonder cloud that's almost in shape of a camel?
                 <p>Polonius: By the mass, and 'tis like a camel, indeed.</p>
                 Hamlet: Methinks it is like a weasel.
@@ -32,7 +34,7 @@
               </textarea>
             </td>
             <td width="50%">
-              <textarea style="width:100%;height: 200px;border: #60bd90 1px solid" id="newHtml">
+              <textarea style="width:100%;height: 200px;" id="newHtml">
                 <div>Hamlet: Do you see the cloud over there that's almost the shape of a camel?
                   <div>Polonius: By golly, it is like a camel, indeed.</div>
                   Hamlet: I think it looks like a weasel.
@@ -55,11 +57,11 @@
 
 <table width="100%">
     <tr id="diffHtml1">
-        <td width="50%" valign="top" id="oldDiffHtml"></td>
-        <td width="50%" valign="top" id="newDiffHtml"></td>
+        <td width="50%" valign="top" id="oldDiffHtml" style="border: #0a84ff 1px solid"></td>
+        <td width="50%" valign="top" id="newDiffHtml" style="border: #0a84ff 1px solid"></td>
     </tr>
     <tr id="diffHtml2">
-        <td width="100%" valign="top" id="oneDiffHtml"></td>
+        <td width="100%" valign="top" id="oneDiffHtml" style="border: #0a84ff 1px solid"></td>
     </tr>
 </table>
 

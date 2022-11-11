@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>UUID</title>
-    <link rel="stylesheet" href="/lib/vue2/element-ui.css">
+    <link rel="stylesheet" href="/lib/vue3/element-plus.index.css" />
     <link rel="stylesheet" href="/lib/vue3/element-plus.css-vars.css" />
+    <script src="/lib/vue3/vue-next.global.js"></script>
+    <script src="/lib/vue3/element-plus.index.full.js"></script>
+    <script src="/lib/vue3/element-plus.index.iife.min.js"></script>
 </head>
 <body>
 <div id="el">
@@ -12,39 +15,33 @@
         <div style="width: 100%;text-align: center;font-size: 20px;margin-top: 100px">
             {{ guid }}
         </div>
-        <div style="width: 100%;text-align: center;font-size: 20px;margin-top: 10px">
-            <el-radio-group v-model="caseSensitive">
+        <el-row justify="center" style="margin: 10px">
+            <el-radio-group v-model="caseSensitive" style="margin-right: 10px">
                 <el-radio-button label="A"></el-radio-button>
                 <el-radio-button label="a"></el-radio-button>
             </el-radio-group>
             <el-checkbox v-model="separator" label="去分隔符" border></el-checkbox>
-        </div>
+        </el-row>
         <div style="width: 100%;text-align: center;font-size: 20px;margin-top: 10px">
-            <el-row>
-                <el-button @click="generateGuid()" type="success" icon="el-icon-refresh" title="重新生成" circle></el-button>
-                <el-button @click="copyText(guid)" type="primary" icon="el-icon-copy-document" title="复制" circle></el-button>
-            </el-row>
+            <el-button @click="generateGuid()" type="success" title="重新生成" circle><el-icon><Refresh /></el-icon></el-button>
+            <el-button @click="copyText(guid)" type="primary" title="复制" circle><el-icon><Check /></el-icon></el-button>
         </div>
     </div>
     <div>
         <div style="width: 100%;text-align: center;font-size: 20px;margin-top: 100px">
             {{ snowflakeId }}
         </div>
-        <div style="width: 100%;text-align: center;font-size: 20px;margin-top: 10px">
-            <el-row>
-                <el-button @click="snowflakeId = snowflake.nextId()" type="success" icon="el-icon-refresh" title="重新生成" circle></el-button>
-                <el-button @click="copyText(snowflakeId)" type="primary" icon="el-icon-copy-document" title="复制" circle></el-button>
-            </el-row>
-        </div>
+        <el-row justify="center" style="margin: 10px">
+            <el-button @click="snowflakeId = snowflake.nextId()" type="success" title="重新生成" circle><el-icon><Refresh /></el-icon></el-button>
+            <el-button @click="copyText(snowflakeId)" type="primary" title="复制" circle><el-icon><Check /></el-icon></el-button>
+        </el-row>
     </div>
 </div>
 </body>
-<script src="/lib/vue2/vue.js"></script>
-<script src="/lib/vue2/element-ui.js"></script>
 <script src="/lib/BigInteger.min.js"></script>
 <script src="js/snowflake.js"></script>
 <script>
-    new Vue({
+    const app = Vue.createApp({
         el: '#el',
         data() {
             return {
@@ -110,5 +107,10 @@
             this.snowflakeId = this.snowflake.nextId();
         },
     })
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component)
+    }
+    app.mount('#el')
 </script>
 </html>
