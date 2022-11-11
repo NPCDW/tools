@@ -30,7 +30,7 @@
                 <el-menu :default-openeds="['1', '2', '3']">
                     <el-sub-menu index="1">
                         <template #title>
-                            <el-icon><Compass /></el-icon>离线功能
+                            <el-icon><Compass /></el-icon>本站功能
                         </template>
                         <el-menu-item index="1-1" @click="menuItemClick('Unicursal/')">一笔画寻路</el-menu-item>
                         <el-menu-item index="1-2" @click="menuItemClick('HtmlDiff/')">HTML文本比对</el-menu-item>
@@ -43,12 +43,12 @@
                         <el-menu-item index="1-9" @click="menuItemClick('StringConversion/')">字符串转换</el-menu-item>
                         <el-menu-item index="1-10" @click="menuItemClick('crypto/')">加解密</el-menu-item>
                     </el-sub-menu>
-                    <el-sub-menu index="2">
-                        <template #title>
-                            <el-icon><Platform /></el-icon>在线功能
-                        </template>
-                        <el-menu-item index="2-1" @click="menuItemClick('ocr/')">文字识别</el-menu-item>
-                    </el-sub-menu>
+<!--                    <el-sub-menu index="2">-->
+<!--                        <template #title>-->
+<!--                            <el-icon><Platform /></el-icon>在线功能-->
+<!--                        </template>-->
+<!--                        <el-menu-item index="2-1" @click="menuItemClick('ocr/')">文字识别</el-menu-item>-->
+<!--                    </el-sub-menu>-->
                     <el-sub-menu index="3">
                         <template #title>
                             <el-icon><Promotion /></el-icon>网站推荐
@@ -133,7 +133,7 @@
     const app = Vue.createApp({
         data() {
             return {
-                iframeSrc: '',
+                iframeSrc: 'uuid',
                 supportVisible: false,
                 supportDialogVisible: false
             }
