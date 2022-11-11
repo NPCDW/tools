@@ -107,21 +107,21 @@
         data() {
             return {
                 columns: [
-                    {dataIndex: '0'},
-                    {dataIndex: '1'},
-                    {dataIndex: '2'},
-                    {dataIndex: '3'},
-                    {dataIndex: '4'},
-                    {dataIndex: '5'}
+                    {dataIndex: 'c0'},
+                    {dataIndex: 'c1'},
+                    {dataIndex: 'c2'},
+                    {dataIndex: 'c3'},
+                    {dataIndex: 'c4'},
+                    {dataIndex: 'c5'}
                 ],
                 totalWidth: 48 * 6 + 1 + 'px',
                 dataSource: [
-                    {key: 0, '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0},
-                    {key: 1, '0': -1, '1': 0, '2': 0, '3': -1, '4': 1, '5': 0},
-                    {key: 2, '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0},
-                    {key: 3, '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0},
-                    {key: 4, '0': 0, '1': -1, '2': 0, '3': 0, '4': -1, '5': 0},
-                    {key: 5, '0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0}
+                    {key: "c0", 'c0': 0, 'c1': 0, 'c2': 0, 'c3': 0, 'c4': 0, 'c5': 0},
+                    {key: "c1", 'c0': -1, 'c1': 0, 'c2': 0, 'c3': -1, 'c4': 1, 'c5': 0},
+                    {key: "c2", 'c0': 0, 'c1': 0, 'c2': 0, 'c3': 0, 'c4': 0, 'c5': 0},
+                    {key: "c3", 'c0': 0, 'c1': 0, 'c2': 0, 'c3': 0, 'c4': 0, 'c5': 0},
+                    {key: "c4", 'c0': 0, 'c1': -1, 'c2': 0, 'c3': 0, 'c4': -1, 'c5': 0},
+                    {key: "c5", 'c0': 0, 'c1': 0, 'c2': 0, 'c3': 0, 'c4': 0, 'c5': 0}
                 ],
                 dataSource2: [],
                 errorMsg: "",
@@ -147,11 +147,11 @@
                 for (let index = 0; index < this.dataSource.length; index++) {
                     matrix[index] = [];
                     for (let j = 0, len = Object.keys(this.dataSource[index]).length; j < len; j++) {
-                        if (this.dataSource[index][j + ''] === 1) {
+                        if (this.dataSource[index]['c' + j] === 1) {
                             startX = index;
                             startY = j;
                         }
-                        matrix[index][j + ''] = this.dataSource[index][j];
+                        matrix[index][j] = this.dataSource[index]['c' + j];
                     }
                 }
                 let instance = new unicursal();
@@ -172,7 +172,7 @@
                     for (let i = 0; i < instance.path.length; i++) {
                         this.dataSource2[i] = {}
                         for (let j = 0; j < instance.path[i].length; j++) {
-                            this.dataSource2[i][j + ''] = instance.path[i][j]
+                            this.dataSource2[i]['c' + j] = instance.path[i][j]
                         }
                     }
                 }
@@ -181,15 +181,15 @@
                 this.totalWidth = this.totalCol * 48 + 1 + 'px'
                 this.columns = []
                 for (let index = 0; index < this.totalCol; index++) {
-                    this.columns[index] = {dataIndex: index + ''};
+                    this.columns[index] = {dataIndex: 'c' + index};
                 }
                 this.dataSource = [];
                 for (let index = 0; index < this.totalRow; index++) {
                     this.dataSource[index] = {};
                     for (let j = 0; j < this.totalCol; j++) {
-                        this.dataSource[index][j + ''] = 0;
+                        this.dataSource[index]['c' + j] = 0;
                     }
-                    this.dataSource[index].key = index;
+                    this.dataSource[index].key = 'c' + index;
                 }
             },
             cellStyle({row, column, rowIndex, columnIndex}) {

@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>OfficePreview</title>
-    <link rel="stylesheet" href="/lib/vue2/element-ui.css">
+    <link rel="stylesheet" href="/lib/vue3/element-plus.index.css" />
     <link rel="stylesheet" href="/lib/vue3/element-plus.css-vars.css" />
-    <script src="/lib/vue2/vue.js"></script>
-    <script src="/lib/vue2/element-ui.js"></script>
+    <script src="/lib/vue3/vue-next.global.js"></script>
+    <script src="/lib/vue3/element-plus.index.full.js"></script>
+    <script src="/lib/vue3/element-plus.index.iife.min.js"></script>
 </head>
 <body style="padding: 0;margin: 0">
-<div style="color: white;background-color: #F56C6C;text-align: center;font-size: 12px;padding:5px 0 5px 0;width: 100%">需输入公网地址（非局域网地址）</div>
 <div id="el" style="text-align: center;padding: 40px">
+    <div style="color: #F56C6C;text-align: center;font-size: 12px;padding:5px 0 5px 0;width: 100%">需输入公网地址（非局域网地址）</div>
     <div>
         <el-input type="text" v-model="onlineUrl" style="width: 100%" ref="input" />
     </div>
@@ -35,8 +36,7 @@
 </div>
 </body>
 <script>
-    new Vue({
-        el: '#el',
+    const app = Vue.createApp({
         data() {
             return {
                 onlineUrl: '',
@@ -55,5 +55,10 @@
             }
         },
     })
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component)
+    }
+    app.mount('#el')
 </script>
 </html>
