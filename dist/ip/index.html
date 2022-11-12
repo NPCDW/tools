@@ -24,19 +24,19 @@
 </head>
 <body>
 <div id="el">
-    <el-row :gutter="20">
+    <el-row :gutter="10">
         <el-col :span="12">
             <el-card class="box-card" title="Powered by https://www.ipify.org/">
-                您的IPV4：<span v-loading="your_ipv4_loading">{{ your_ipv4 }}</span>
+                您的IPV4：<span>{{ your_ipv4 }}</span>
             </el-card>
         </el-col>
         <el-col :span="12">
             <el-card class="box-card" title="Powered by https://www.ipify.org/">
-                您的IPV6：<span v-loading="your_ipv6_loading">{{ your_ipv6 }}</span>
+                您的IPV6：<span>{{ your_ipv6 }}</span>
             </el-card>
         </el-col>
     </el-row>
-    <el-row :gutter="20">
+    <el-row :gutter="10">
         <el-col :span="12">
             <el-card class="box-card">
                 <el-row>IPV4 / Number</el-row>
@@ -74,7 +74,7 @@
             </el-card>
         </el-col>
     </el-row>
-    <el-row :gutter="20" style="margin-top: 20px">
+    <el-row :gutter="10" style="margin-top: 20px">
         <el-col :span="24">
             <el-card class="box-card">
                 <el-row>IPV4 / IPV6</el-row>
@@ -91,7 +91,7 @@
             </el-card>
         </el-col>
     </el-row>
-    <el-row :gutter="20" style="margin-top: 20px">
+    <el-row :gutter="10" style="margin-top: 20px">
         <el-col :span="12">
             <el-card class="box-card">
                 <el-row>IPV4 -> CIDR</el-row>
@@ -123,7 +123,7 @@
             </el-card>
         </el-col>
     </el-row>
-    <el-row :gutter="20" style="margin-top: 20px">
+    <el-row :gutter="10" style="margin-top: 20px">
         <el-col :span="12">
             <el-card class="box-card">
                 <el-row>CIDR -> IPV4</el-row>
@@ -160,8 +160,6 @@
 const app = Vue.createApp({
     data() {
         return {
-            your_ipv4_loading: true,
-            your_ipv6_loading: true,
             your_ipv4: '',
             your_ipv6: '',
             ipv4_1: '0.0.0.0',
@@ -387,6 +385,7 @@ const app = Vue.createApp({
         },
     },
     created() {
+        this.your_ipv4 = '加载中'
         axios.get('https://api4.ipify.org/')
             .then(response => {
                 this.your_ipv4 = response.data
@@ -395,9 +394,7 @@ const app = Vue.createApp({
                 console.log(error)
                 this.your_ipv4 = '获取失败'
             })
-            .finally(() => {
-                this.your_ipv4_loading = false
-            })
+        this.your_ipv4 = '加载中'
         axios.get('https://api6.ipify.org/')
             .then(response => {
                 this.your_ipv6 = response.data
@@ -405,9 +402,6 @@ const app = Vue.createApp({
             .catch(error => {
                 console.log(error)
                 this.your_ipv6 = '获取失败'
-            })
-            .finally(() => {
-                this.your_ipv6_loading = false
             })
     },
 })
