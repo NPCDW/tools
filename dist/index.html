@@ -15,12 +15,6 @@
             border-right: none;
         }
     </style>
-    <style>
-        html.dark {
-            /* 自定义深色背景颜色 */
-            --el-bg-color: #626aef;
-        }
-    </style>
 </head>
 <body style="margin: 0; padding: 0;">
 <div id="app">
@@ -91,7 +85,7 @@
                 trigger="click"
                 v-model:visible="supportVisible">
             <template #reference>
-                <img src="image/love.svg" alt="" title="赞赏" @click="supportVisible = !supportVisible" style="width: 40px;">
+                <img src="image/love.svg" alt="" title="赞赏" style="width: 40px;">
             </template>
             <div>
                 <div style="text-indent:2em">您想请我喝杯奶茶吗？</div>
@@ -173,11 +167,11 @@
 </script>
 <!--百度统计-->
 <script>
-    var _hmt = _hmt || [];
+    let _hmt = _hmt || [];
     (function() {
-        var hm = document.createElement("script");
+        let hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?7363c32345af2620215d2f8b39b05c6d";
-        var s = document.getElementsByTagName("script")[0];
+        let s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
     })();
 </script>
