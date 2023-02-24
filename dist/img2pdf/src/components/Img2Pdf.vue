@@ -19,7 +19,7 @@
                 <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
                   <el-icon><ZoomIn /></el-icon>
                 </span>
-                <span class="el-upload-list__item-delete" @click="handleRemove(file)">
+                <span class="el-upload-list__item-delete" @click="handleRemove(file, [file])">
                   <el-icon><Delete /></el-icon>
                 </span>
                 <span class="el-upload-list__item-right" @click="handleMove(file, 'right')">
