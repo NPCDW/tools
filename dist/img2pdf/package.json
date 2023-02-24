@@ -1,5 +1,5 @@
 {
-  "name": "my-vue-app",
+  "name": "img2pdf",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,7 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.0.10",
     "element-plus": "^2.2.32",
+    "jspdf": "^2.5.1",
     "vue": "^3.2.45"
   },
   "devDependencies": {

@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import Img2Pdf from './components/Img2Pdf.vue'
 </script>
 
 <template>
-  <HelloWorld msg="Vite + Vue" />
+  <Img2Pdf />
 </template>
 
 <style scoped>
-</style>
-
-<style>
 </style>
