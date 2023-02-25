@@ -18,6 +18,11 @@ declare module '@vue/runtime-core' {
     ElRadio: typeof import('element-plus/es')['ElRadio']
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElUpload: typeof import('element-plus/es')['ElUpload']
+    IEpBack: typeof import('~icons/ep/back')['default']
+    IEpDelete: typeof import('~icons/ep/delete')['default']
+    IEpPlus: typeof import('~icons/ep/plus')['default']
+    IEpRight: typeof import('~icons/ep/right')['default']
+    IEpZoomIn: typeof import('~icons/ep/zoom-in')['default']
     Img2Pdf: typeof import('./src/components/Img2Pdf.vue')['default']
   }
 }

@@ -6,7 +6,7 @@
     <div style="margin: 40px;">
       <el-upload action="#" list-type="picture-card" :auto-upload="false" accept="image/*" v-model:file-list="fileList"
                  :multiple="true" :on-change="handleChange">
-        <el-icon><Plus /></el-icon>
+        <el-icon><i-ep-Plus /></el-icon>
         <template #file="{ file }">
           <div class="demo-image__preview">
             <el-image fit="cover" style="width: 150px; height: 150px"
@@ -14,16 +14,16 @@
                       alt=""/>
             <span class="el-upload-list__item-actions">
                 <span class="el-upload-list__item-left" @click="handleMove(file, 'left')">
-                  <el-icon><Back /></el-icon>
+                  <el-icon><i-ep-Back /></el-icon>
                 </span>
                 <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
-                  <el-icon><ZoomIn /></el-icon>
+                  <el-icon><i-ep-ZoomIn /></el-icon>
                 </span>
                 <span class="el-upload-list__item-delete" @click="handleRemove(file, [file])">
-                  <el-icon><Delete /></el-icon>
+                  <el-icon><i-ep-Delete /></el-icon>
                 </span>
                 <span class="el-upload-list__item-right" @click="handleMove(file, 'right')">
-                  <el-icon><Right /></el-icon>
+                  <el-icon><i-ep-Right /></el-icon>
                 </span>
               </span>
           </div>
