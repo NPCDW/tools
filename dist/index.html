@@ -57,7 +57,7 @@
         <el-container>
             <el-main style="padding: 0">
                 <el-scrollbar>
-                    <iframe id="iframe" :src="iframeSrc" style="height: 100vh" width="100%" frameborder="0"></iframe>
+                    <iframe v-show="iframeShow" id="iframe" ref="iframe" :src="iframeSrc" style="height: 100vh" width="100%" frameborder="0"></iframe>
                 </el-scrollbar>
             </el-main>
         </el-container>
@@ -128,11 +128,12 @@
         data() {
             return {
                 iframeSrc: 'uuid',
+                iframeShow: false,
                 supportVisible: false,
                 supportDialogVisible: false
             }
         },
-        created() {
+        mounted() {
             this.hashChangeFire()
             window.addEventListener('hashchange', this.hashChangeFire, false);
         },
@@ -155,6 +156,15 @@
             hashChangeFire(){
                 if (location.hash) {
                     this.iframeSrc = location.hash.slice(1)
+                    this.$refs.iframe.onload = () => {
+                        this.iframeShow = true;
+                    };
+                } else {
+                    this.iframeSrc = 'uuid'
+                    this.$refs.iframe.onload = () => {
+                        this.iframeShow = true;
+                    };
+                    // setTimeout(() => this.iframeShow = true, 500)
                 }
             }
         }
