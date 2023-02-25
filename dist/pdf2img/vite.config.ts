@@ -5,5 +5,8 @@ import vue from '@vitejs/plugin-vue'
 export default ({mode}) => defineConfig({
     plugins: [vue()],
     // development    production
-    base: mode === 'development' ? '/' : './'
+    base: mode === 'development' ? '/' : './',
+    optimizeDeps: {
+        include: ['pdfjs-dist']
+    }
 })

@@ -167,7 +167,7 @@ interface UploadUserFileExtend extends UploadUserFile {
   pageSize: string | number[];
 }
 
-function convert() {
+function convert() : void {
   if (fileList.value.length === 0) {
     ElMessage.warning('请先上传至少一张图片')
     return;
@@ -219,7 +219,7 @@ function convert() {
   })
 }
 
-function getFormat(file: UploadUserFileExtend) {
+function getFormat(file: UploadUserFileExtend) : Promise<{}> {
   return new Promise((resolve, reject) => {
     file.pageDirection = pageDirection.value as "portrait" | "p" | "l" | "landscape"
     let url = getFileUrl(file)
@@ -262,21 +262,21 @@ function getFormat(file: UploadUserFileExtend) {
   })
 }
 
-const handlePictureCardPreview: UploadProps['onPreview'] = (uploadFile) => {
+const handlePictureCardPreview: UploadProps['onPreview'] = (uploadFile) : void => {
   initialIndex.value = getFileIndex(uploadFile)
   previewVisible.value = true;
 }
 
-function handleChange(file: UploadUserFile, fileList: UploadUserFile[]) {
+function handleChange(file: UploadUserFile, fileList: UploadUserFile[]) : void {
   fileList = [...fileList]
 }
 
-const handleRemove: UploadProps['onRemove'] = (file, uploadFiles) => {
+const handleRemove: UploadProps['onRemove'] = (file, uploadFiles) : void => {
   let index = getFileIndex(file)
   fileList.value.splice(index, 1)
 }
 
-function handleMove(file: UploadUserFile, direction: string) {
+function handleMove(file: UploadUserFile, direction: string) : void {
   let index = getFileIndex(file)
   if (index === 0 && direction === 'left') {
     ElMessage.warning('已经是第一张图片了，不能再向左移动了')
@@ -304,7 +304,7 @@ function getFileIndex(file: UploadUserFile) : number {
   return 0
 }
 
-function getFileUrl(file: UploadUserFile) {
+function getFileUrl(file: UploadUserFile) : string | undefined {
   console.log(file)
   let url = file.url;
   if (!file.url) {
