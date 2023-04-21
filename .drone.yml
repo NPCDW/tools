@@ -1,8 +1,13 @@
 kind: pipeline
-type: docker
+type: exec
 name: hello
 
 steps:
 - name: greeting
   commands:
   - echo hello world
+
+- name: update
+  command:
+  - cd /usr/local/soft/nginx/html/tools/
+  - git pull
