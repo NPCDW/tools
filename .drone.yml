@@ -12,8 +12,5 @@ steps:
 
 - name: update
   commands:
-  - pwd
   - cd /usr/local/soft/nginx/html/tools/
-  - pwd
   - git pull
-  - echo finish
