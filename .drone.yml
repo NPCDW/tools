@@ -11,7 +11,7 @@ steps:
   - echo hello world
 
 - name: update
-  command:
+  commands:
   - pwd
   - cd /usr/local/soft/nginx/html/tools/
   - pwd
