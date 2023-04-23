@@ -6,17 +6,14 @@ clone:
   depth: 1
 
 steps:
-- name: greeting
-  image: alpine
-  commands:
-  - echo hello world
-
 - name: update
   image: alpine
   volumes:
   - name: html
     path: /html
   commands:
+  - ls -a
+  - ls -a /html
   - rm -rf /html/*
   - mv dist /html/
 
