@@ -12,12 +12,8 @@ steps:
   - name: html
     path: /html
   commands:
-  - ls -a
-  - ls -a /html
-  - rm -rf /html/*
-  - ls -a /html
+  - rm -rf /html/dist
   - mv dist /html/
-  - ls -a
 
 volumes:
 - name: html
