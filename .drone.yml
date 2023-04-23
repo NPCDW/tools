@@ -7,6 +7,7 @@ clone:
 
 steps:
 - name: update
+  pull: if-not-exists
   image: alpine
   volumes:
   - name: html
