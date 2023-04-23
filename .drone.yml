@@ -15,8 +15,8 @@ steps:
   - ls -a
   - ls -a /html
   - rm -rf /html/*
-  - mv dist /html/
   - ls -a /html
+  - mv dist /html/
   - ls -a
 
 volumes:
