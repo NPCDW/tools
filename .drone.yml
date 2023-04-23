@@ -1,16 +1,26 @@
 kind: pipeline
-type: exec
-name: hello
+type: docker
+name: site-update
 
 clone:
-  disable: true
+  depth: 1
 
 steps:
 - name: greeting
+  image: alpine
   commands:
   - echo hello world
 
 - name: update
+  image: alpine
+  volumes:
+  - name: html
+    path: /html
   commands:
-  - cd /usr/local/soft/nginx/html/tools/
-  - git pull
+  - rm -rf /html/*
+  - mv dist /html/
+
+volumes:
+- name: html
+  host:
+    path: /usr/local/soft/nginx/html/tools
