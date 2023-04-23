@@ -16,6 +16,8 @@ steps:
   - ls -a /html
   - rm -rf /html/*
   - mv dist /html/
+  - ls -a /html
+  - ls -a
 
 volumes:
 - name: html
