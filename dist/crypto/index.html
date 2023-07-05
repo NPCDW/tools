@@ -80,14 +80,30 @@
             <el-input v-model="decode_src_str" type="textarea" placeholder="输入你想要解码的字符串"></el-input>
         </el-row>
     </el-card>
-<!--    <el-card class="box-card" style="margin-top: 8px">-->
-<!--        <el-row>对称加解密</el-row>-->
-<!--        <el-row>-->
-<!--            <el-input v-model="message_digest_src_str" placeholder="输入你想要转换的字符串">-->
-<!--                <template #prepend>原字符串</template>-->
-<!--            </el-input>-->
-<!--        </el-row>-->
-<!--    </el-card>-->
+    <el-card class="box-card" style="margin-top: 8px">
+        <el-row>
+            <span>AES</span>
+            <el-input v-model="aes_key" placeholder="输入AES Key" style="width: 350px;margin-left: 20px;height: 24px">
+                <template #prepend>Key</template>
+            </el-input>
+            <el-input v-model="aes_iv" placeholder="输入AES IV" style="width: 350px;margin-left: 20px;height: 24px">
+                <template #prepend>IV</template>
+            </el-input>
+            <el-input v-model="aes_model" placeholder="输入AES模式" style="width: 350px;margin-left: 20px;height: 24px">
+                <template #prepend>Model</template>
+            </el-input>
+        </el-row>
+        <el-row>
+            <el-input v-model="aes_encode_src_str" type="textarea" placeholder="输入你想要加密的字符串"></el-input>
+        </el-row>
+        <el-row justify="center">
+            <el-button type="primary" circle @click="aes_encode_src()"><el-icon><Bottom /></el-icon></el-button>
+            <el-button type="primary" circle @click="aes_decode_src()"><el-icon><Top /></el-icon></el-button>
+        </el-row>
+        <el-row>
+            <el-input v-model="aes_decode_src_str" type="textarea" placeholder="输入你想要解密的字符串"></el-input>
+        </el-row>
+    </el-card>
 <!--    <el-card class="box-card" style="margin-top: 8px">-->
 <!--        <el-row>非对称加解密</el-row>-->
 <!--        <el-row>-->
@@ -108,6 +124,11 @@ const app = Vue.createApp({
             encoded_radio: 'base64',
             encode_src_str: '',
             decode_src_str: '',
+            aes_encode_src_str: '',
+            aes_decode_src_str: '',
+            aes_key: '',
+            aes_iv: '',
+            aes_model: 'AES/CBC/PKCS5Padding',
         }
     },
     computed: {
@@ -158,6 +179,22 @@ const app = Vue.createApp({
                 case "url": this.encode_src_str = decodeURIComponent(this.decode_src_str); break;
                 case "hex": this.encode_src_str = CryptoJS.enc.Hex.parse(this.decode_src_str).toString(CryptoJS.enc.Utf8); break;
             }
+        },
+        aes_encode_src() {
+            let text = CryptoJS.enc.Utf8.parse(this.aes_encode_src_str)
+            let key = CryptoJS.enc.Utf8.parse(this.aes_key)
+            this.aes_decode_src_str = CryptoJS.AES.encrypt(text, key, {
+                iv: CryptoJS.enc.Utf8.parse(this.aes_iv),
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            }).ciphertext.toString(CryptoJS.enc.Base64);
+        },
+        aes_decode_src() {
+            this.aes_encode_src_str = CryptoJS.AES.decrypt(this.aes_decode_src_str, CryptoJS.enc.Utf8.parse(this.aes_key), {
+                iv: CryptoJS.enc.Utf8.parse(this.aes_iv),
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            }).toString(CryptoJS.enc.Utf8)
         },
     },
     created() {
