@@ -1,3 +1,1 @@
-Hello Nginx
-
-[https://0520.site/](https://0520.site/) 站点资源
+[https://0520.site/](https://0520.site/) 一些常用的开发者工具
