@@ -12,11 +12,15 @@ import {ref} from "vue";
 
 const input = ref("");
 
-async function format() {
-  input.value = await prettier.format(input.value, {
+function format() {
+  prettier.format(input.value, {
     parser: "html",
     plugins: [parserHtml]
-  });
+  }).then(res => {
+    input.value = res
+  }).catch(e => {
+    input.value = e
+  })
 }
 </script>
 
