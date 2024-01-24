@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片压缩</title>
+    <link rel="stylesheet" href="../lib/vue3/element-plus.index.css" />
+    <link rel="stylesheet" href="../lib/vue3/element-plus.css-vars.css" />
+    <script src="../lib/vue3/vue-next.global.js"></script>
+<!--    <script src="../lib/FileSaver.min.js"></script>-->
+    <style>
+        .flip-horizontally {
+            /* flip horizontally */
+            transform: scaleX(-1);
+        }
+
+        .flip-vertically {
+            /* flip vertically */
+            transform: scaleY(-1);
+        }
+
+        .flip-both {
+            /* flip both */
+            transform: scale(-1, -1);
+        }
+    </style>
+</head>
+
+<body style="margin: 0; padding: 0;">
+<div style="color: white;background-color: #67C23A;text-align: center;font-size: 12px;padding:5px 0 5px 0;width: 100%">【没有保存，就没有泄露】【本站绝不会保存您的任何资源】【您现在可以断网（拔网线或开飞行模式）进行操作】</div>
+<div id="el">
+    <h1 style="text-align: center;">图片翻转</h1>
+    <div style="border-top: #414243 1px solid; border-bottom: #414243 1px solid; height: 300px;">
+        <div style="height: 100%;display: flex;flex-direction: column;justify-content: center;">
+            <div style="display: flex;">
+                <div style="min-width: 500px;">
+                    <div style="display: flex;justify-content: center;">
+                        <div v-if="!srcImageUrl" style="border: #DDDDDD 3px dashed;height: 200px;line-height: 200px;width: 260px;position: relative">
+                            <div style="position: absolute;font-size: 40px;text-align: center;color: #DDDDDD;width: 100%;">+</div>
+                            <input type="file" accept="image/*" @change="handleImageUpload($event)" style="opacity: 0;position: absolute;width: 100%;height: 100%">
+                        </div>
+                        <div v-else style="position: relative">
+                            <img :src="srcImageUrl" :alt="srcImageName" srcset="" style="max-height: 260px;width: 300px;">
+                            <input type="file" accept="image/*" @change="handleImageUpload($event)" style="opacity: 0;position: absolute;top: 0;left: 0;width: 100%;height: 100%">
+                        </div>
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    <div style="height: 100%;display: flex;flex-direction: column;justify-content: center;">
+                        <div>名称：<span>{{ srcImageName }}</span></div>
+                        <div>大小：<span>{{ srcImageSize }}</span></div>
+                        <div>像素：<span v-if="srcImageWidth">{{ srcImageWidth }}×{{ srcImageHeight }}</span></div>
+                        <div>类型：<span>{{ srcImageType }}</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="border-bottom: #414243 1px solid; height: 300px;">
+        <div style="height: 100%;display: flex;flex-direction: column;justify-content: center;">
+            <div style="display: flex;">
+                <div style="min-width: 500px;">
+                    <div style="display: flex;justify-content: center;">
+                        <div v-if="!srcImageUrl" style="border: #DDDDDD 3px dashed;height: 200px;width: 260px;">
+                        </div>
+                        <canvas v-else id="flip-horizontally" @click="download($event)" style="max-height: 260px;width: 300px;"></canvas>
+                    </div>
+                </div>
+                <div style="min-width: 500px;">
+                    <div style="display: flex;justify-content: center;">
+                        <div v-if="!srcImageUrl" style="border: #DDDDDD 3px dashed;height: 200px;width: 260px;">
+                        </div>
+                        <canvas v-else id="flip-vertically" @click="download($event)" style="max-height: 260px;width: 300px;"></canvas>
+                    </div>
+                </div>
+                <div style="min-width: 500px;">
+                    <div style="display: flex;justify-content: center;">
+                        <div v-if="!srcImageUrl" style="border: #DDDDDD 3px dashed;height: 200px;width: 260px;">
+                        </div>
+                        <canvas v-else id="flip-both" @click="download($event)" style="max-height: 260px;width: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    const app = Vue.createApp({
+        el: '#el',
+        data() {
+            return {
+                srcImageFile: null,
+                srcImageUrl: null,
+                srcImageName: null,
+                srcImageType: null,
+                srcImageSize: null,
+                srcImageWidth: null,
+                srcImageHeight: null,
+            }
+        },
+        methods: {
+            handleImageUpload(event) {
+                if (!event.target.files[0]) {
+                    return
+                }
+                this.srcImageFile = event.target.files[0];
+                this.srcImageUrl = URL.createObjectURL(this.srcImageFile)
+                this.srcImageName = this.srcImageFile.name
+                this.srcImageType = this.srcImageFile.type
+
+                let vm = this
+                let img = new Image();
+                img.src = this.srcImageUrl;
+                img.onload = function () {
+                    vm.srcImageWidth = this.width
+                    vm.srcImageHeight = this.height
+                };
+
+                this.srcImageSize = this.srcImageFile.size < 1024 ?
+                    this.srcImageFile.size + "B" : this.srcImageFile.size / 1024 < 1024 ?
+                        (this.srcImageFile.size / 1024).toFixed(2) + "KB" : (this.srcImageFile.size / 1024 / 1024).toFixed(2) + "MB"
+
+                this.handleImage()
+            },
+            handleImage() {
+                let img = new Image();
+                img.src = this.srcImageUrl;
+                img.onload = function () {
+                    const horizontallyImage = document.getElementById('flip-horizontally');
+                    horizontallyImage.width = this.width;
+                    horizontallyImage.height = this.height;
+                    const horizontallyCtx = horizontallyImage.getContext('2d');
+                    horizontallyCtx.scale(-1, 1);
+                    horizontallyCtx.drawImage(img, -horizontallyImage.width, 0);
+
+                    const verticallyImage = document.getElementById('flip-vertically');
+                    verticallyImage.width = this.width;
+                    verticallyImage.height = this.height;
+                    const verticallyCtx = verticallyImage.getContext('2d');
+                    verticallyCtx.scale(1, -1);
+                    verticallyCtx.drawImage(img, 0, -verticallyImage.height);
+
+                    const bothImage = document.getElementById('flip-both');
+                    bothImage.width = this.width;
+                    bothImage.height = this.height;
+                    const bothCtx = bothImage.getContext('2d');
+                    bothCtx.scale(-1, -1);
+                    bothCtx.drawImage(img, -bothImage.width, -bothImage.height);
+                };
+
+            },
+            download(event) {
+                let link = document.createElement('a');
+                link.download = event.target.id + '-' + this.srcImageName;
+                link.href = event.target.toDataURL(this.srcImageType);
+                link.click();
+                // event.target.toBlob(function(blob) {
+                //     saveAs(blob, event.target.id + '-' + this.srcImageName)
+                // });
+            },
+        },
+    })
+    app.mount('#el')
+</script>
+</html>
