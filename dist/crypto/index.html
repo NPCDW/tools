@@ -16,7 +16,7 @@
             font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
         }
     </style>
-    <script src="../lib/vue3/vue-next.global.js"></script>
+    <script src="../lib/vue3/vue.global.prod.js"></script>
     <script src="../lib/vue3/element-plus.index.full.js"></script>
     <script src="../lib/vue3/element-plus.index.iife.min.js"></script>
     <script src="../lib/crypto-js-4.1.1/crypto-js.js"></script>
@@ -61,26 +61,6 @@
         </el-row>
     </el-card>
     <el-card class="box-card" style="margin-top: 8px">
-        <el-row align="middle">
-            <span>编解码</span>
-            <el-radio-group v-model="encoded_radio" size="small" style="margin-left: 20px">
-                <el-radio label="base64" border>BASE64</el-radio>
-                <el-radio label="url" border>URL</el-radio>
-                <el-radio label="hex" border>HEX</el-radio>
-            </el-radio-group>
-        </el-row>
-        <el-row>
-            <el-input v-model="encode_src_str" type="textarea" placeholder="输入你想要编码的字符串"></el-input>
-        </el-row>
-        <el-row justify="center">
-            <el-button type="primary" circle @click="encode_src()"><el-icon><Bottom /></el-icon></el-button>
-            <el-button type="primary" circle @click="decode_src()"><el-icon><Top /></el-icon></el-button>
-        </el-row>
-        <el-row>
-            <el-input v-model="decode_src_str" type="textarea" placeholder="输入你想要解码的字符串"></el-input>
-        </el-row>
-    </el-card>
-    <el-card class="box-card" style="margin-top: 8px">
         <el-row>
             <span>AES</span>
             <el-input v-model="aes_key" placeholder="输入AES Key" style="width: 350px;margin-left: 20px;height: 24px">
@@ -94,14 +74,14 @@
             </el-input>
         </el-row>
         <el-row>
-            <el-input v-model="aes_encode_src_str" type="textarea" placeholder="输入你想要加密的字符串"></el-input>
+            <el-input v-model="aes_encode_src_str" type="textarea" :autosize="{ minRows: 6 }" placeholder="输入你想要加密的字符串"></el-input>
         </el-row>
         <el-row justify="center">
             <el-button type="primary" circle @click="aes_encode_src()"><el-icon><Bottom /></el-icon></el-button>
             <el-button type="primary" circle @click="aes_decode_src()"><el-icon><Top /></el-icon></el-button>
         </el-row>
         <el-row>
-            <el-input v-model="aes_decode_src_str" type="textarea" placeholder="输入你想要解密的字符串"></el-input>
+            <el-input v-model="aes_decode_src_str" type="textarea" :autosize="{ minRows: 6 }" placeholder="输入你想要解密的字符串"></el-input>
         </el-row>
     </el-card>
 <!--    <el-card class="box-card" style="margin-top: 8px">-->
@@ -121,9 +101,6 @@ const app = Vue.createApp({
             message_digest_src_str: '',
             message_digest_key: '',
             message_digest_radio: 'hash',
-            encoded_radio: 'base64',
-            encode_src_str: '',
-            decode_src_str: '',
             aes_encode_src_str: '',
             aes_decode_src_str: '',
             aes_key: '',
@@ -161,25 +138,6 @@ const app = Vue.createApp({
         },
     },
     methods: {
-        encode_src() {
-            let data = CryptoJS.enc.Utf8.parse(this.encode_src_str);
-            switch (this.encoded_radio) {
-                case "base64":
-                    this.decode_src_str = CryptoJS.enc.Base64.stringify(data);
-                    break;
-                case "url": this.decode_src_str = encodeURIComponent(this.encode_src_str); break;
-                case "hex":
-                    this.decode_src_str = CryptoJS.enc.Hex.stringify(data);
-                    break;
-            }
-        },
-        decode_src() {
-            switch (this.encoded_radio) {
-                case "base64": this.encode_src_str = CryptoJS.enc.Base64.parse(this.decode_src_str).toString(CryptoJS.enc.Utf8); break;
-                case "url": this.encode_src_str = decodeURIComponent(this.decode_src_str); break;
-                case "hex": this.encode_src_str = CryptoJS.enc.Hex.parse(this.decode_src_str).toString(CryptoJS.enc.Utf8); break;
-            }
-        },
         aes_encode_src() {
             let text = CryptoJS.enc.Utf8.parse(this.aes_encode_src_str)
             let key = CryptoJS.enc.Utf8.parse(this.aes_key)
