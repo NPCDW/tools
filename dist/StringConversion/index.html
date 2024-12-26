@@ -52,6 +52,11 @@
                 <template #prepend>大小写反转</template>
             </el-input>
         </el-row>
+        <el-row>
+            <el-input v-model="target_str5" readonly placeholder="数据库字段">
+                <template #prepend>数据库字段</template>
+            </el-input>
+        </el-row>
     </el-card>
     <el-card class="box-card" style="margin-top: 8px">
         <el-row>驼峰 / 横线 / 下划线</el-row>
@@ -131,6 +136,12 @@ const app = Vue.createApp({
                 }
             }
             return res;
+        },
+        target_str5() {
+            if (!this.src_str) {
+                return null;
+            }
+            return this.src_str.toUpperCase().replace(" ", "_").replace("-", "_");
         },
         amountStr() {
             if (!this.amountNumber) {
