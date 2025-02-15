@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>UUID</title>
+    <link rel="stylesheet" href="../lib/vue3/element-plus.index.css" />
+    <link rel="stylesheet" href="../lib/vue3/element-plus.css-vars.css" />
+    <script src="../lib/vue3/vue.global.prod.js"></script>
+    <script src="../lib/vue3/element-plus.index.full.js"></script>
+    <script src="../lib/vue3/element-plus.index.iife.min.js"></script>
+</head>
+<body>
+<div id="el">
+    <div style="margin: 10px">
+        <el-input v-model="sourceJson" type="textarea" :autosize="{ minRows: 6, maxRows: 20 }" />
+    </div>
+    <div style="text-align: center">
+        <el-button @click="convert" type="primary">mock</el-button>
+    </div>
+    <div style="margin: 10px">
+        <el-input v-model="targetJson" type="textarea" :autosize="{ minRows: 6, maxRows: 20 }" />
+    </div>
+</div>
+</body>
+<script>
+    const app = Vue.createApp({
+        el: '#el',
+        data() {
+            return {
+                sourceJson: "",
+                targetJson: "",
+            }
+        },
+        methods: {
+            convert() {
+                let sourceJson = JSON.parse(this.sourceJson)
+                const targetJson = this.randomize(sourceJson)
+                this.targetJson = JSON.stringify(targetJson, null, 4)
+            },
+            randomize(obj) {
+                if (typeof obj === 'object' && obj !== null) {
+                    for (let key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            obj[key] = this.randomize(obj[key]);
+                        }
+                    }
+                } else if (typeof obj === 'boolean') {
+                    // 随机改变布尔值
+                    obj = Math.random() < 0.5;
+                } else if (typeof obj === 'number') {
+                    // 保持数字位数不变，生成一个新的数字
+                    const numStr = obj.toString();
+                    let newNumStr = '';
+                    for (let i = 0; i < numStr.length; i++) {
+                        if (numStr[i] === '.') {
+                            newNumStr += '.';
+                        } else {
+                            newNumStr += Math.floor(Math.random() * 10);
+                        }
+                    }
+                    obj = parseFloat(newNumStr);
+                } else if (typeof obj === 'string') {
+                    // 保持字符串长度不变，随机替换字符
+                    let newStr = '';
+                    for (let i = 0; i < obj.length; i++) {
+                        const char = obj[i];
+                        if (/[a-zA-Z]/.test(char)) {
+                            // 如果是字母，随机替换为其他字母
+                            const isUpper = char === char.toUpperCase();
+                            const newChar = String.fromCharCode(isUpper ? Math.floor(Math.random() * 26) + 65 : Math.floor(Math.random() * 26) + 97);
+                            newStr += newChar;
+                        } else if (/\d/.test(char)) {
+                            // 如果是数字，随机替换为其他数字
+                            newStr += Math.floor(Math.random() * 10);
+                        } else {
+                            // 如果是符号，保持不变
+                            newStr += char;
+                        }
+                    }
+                    obj = newStr;
+                }
+                return obj;
+            }
+        },
+    })
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component)
+    }
+    app.mount('#el')
+</script>
+</html>
