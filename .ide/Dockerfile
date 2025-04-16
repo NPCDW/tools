@@ -7,6 +7,7 @@ RUN code-server --install-extension njzy.stats-bar
 RUN code-server --install-extension donjayamanne.githistory
 RUN code-server --install-extension Tencent-Cloud.coding-copilot
 RUN code-server --install-extension cnbcool.cnb-welcome
+RUN code-server --install-extension yandeu.five-server
 
 RUN apt-get update && apt-get install -y curl wget unzip openssh-server git 
 
