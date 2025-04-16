@@ -31,7 +31,7 @@ master:
             username: $REMOTE_USERNAME
             key: $PRIVATE_KEY
             port: $REMOTE_PORT
-            target: /usr/local/soft/nginx/html/tools/temp
+            target: /home/zero/
             source: ./dist
 
           # https://docs.cnb.cool/zh/plugins/public/tencentcom/ssh
@@ -45,6 +45,6 @@ master:
             port: ${REMOTE_PORT}
             command_timeout: 2m
             script: |
-              cd /usr/local/soft/nginx/html/tools/temp
-              rm -rf ../dist
-              mv dist ../
+              cd /home/zero/
+              sudo rm -rf /usr/local/soft/nginx/html/tools/dist
+              mv dist /usr/local/soft/nginx/html/tools/
