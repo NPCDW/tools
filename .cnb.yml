@@ -47,4 +47,4 @@ master:
             script: |
               cd /home/zero/
               sudo rm -rf /usr/local/soft/nginx/html/tools/dist
-              mv dist /usr/local/soft/nginx/html/tools/
+              sudo mv dist /usr/local/soft/nginx/html/tools/
