@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>UUID</title>
+    <link rel="stylesheet" href="../lib/vue3/element-plus.index.css" />
+    <link rel="stylesheet" href="../lib/vue3/element-plus.css-vars.css" />
+    <style>
+        .el-row {
+            margin-bottom: 20px;
+        }
+        .el-row:last-child {
+            margin-bottom: 0;
+        }
+        input, textarea {
+            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+        }
+    </style>
+    <script src="../lib/vue3/vue.global.prod.js"></script>
+    <script src="../lib/vue3/element-plus.index.full.js"></script>
+    <script src="../lib/vue3/element-plus.index.iife.min.js"></script>
+</head>
+<body>
+<div id="el">
+    <el-input v-model="exam_json" style="width: 100%;" :rows="20" type="textarea" placeholder="Please input"></el-input>
+    <div style="margin: 10px 0;text-align: center">
+        <el-button type="primary" @click="extract()">提取</el-button>
+    </div>
+    <el-input v-model="exam_text" style="width: 100%;" :rows="20" type="textarea"></el-input>
+</div>
+</body>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                exam_json: "",
+                exam_text: "",
+            }
+        },
+        methods: {
+            extract() {
+                this.exam_text = '角色扮演：你正在参加华为云微认证考试\n' +
+                    '要求：通过华为云认证考试\n' +
+                    '我会给你一些题目，请直接输出答案，不要出现相关题目进行分析，也不要出现其他无关内容。\n' +
+                    '判断题请给出正确的选项，例如：true\n' +
+                    '单选题请给出正确的选项编号，例如：2\n' +
+                    '多选题请给出所有正确选项的编号，用空格隔开，例如：1 2 3 4\n'
+                let index = 0
+                let exam_json_format = JSON.parse(this.exam_json)
+                for (let exam of exam_json_format) {
+                    index++
+                    let type
+                    if (exam["type"] == 2) {
+                        type = "判断题"
+                    } else if (exam["type"] == 0) {
+                        type = "单选题"
+                    } else if (exam["type"] == 1) {
+                        type = "多选题"
+                    }
+                    this.exam_text += index + ". (判断题)" + exam["content"] + "\n"
+                    let options_index = 0
+                    for (let options of exam["options"]) {
+                        options_index++
+                        this.exam_text += "选项" + options_index + ". " + options["optionContent"] + "\n"
+                    }
+                }
+            }
+        },
+    })
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component)
+    }
+    app.mount('#el')
+</script>
+</html>
