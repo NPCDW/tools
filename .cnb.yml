@@ -9,3 +9,51 @@ $:
             auth_type: https
             username: ${GITHUB_USERNAME}
             password: ${GITHUB_ACCESS_TOKEN}
+
+master:
+  push:
+    - imports: https://cnb.cool/my-codespace/envs/-/blob/main/github-secret.yml
+      stages:
+        - name: sync to github
+          image: tencentcom/git-sync
+          settings:
+            target_url: https://github.com/NPCDW/tools.git
+            auth_type: https
+            username: ${GITHUB_USERNAME}
+            password: ${GITHUB_ACCESS_TOKEN}
+    - docker:
+        image: debian:bookworm-slim
+
+      # 加载密钥到环境变量：https://docs.cnb.cool/zh/env.html#dao-ru-huan-jing-bian-liang
+      imports: 
+        - https://cnb.cool/my-codespace/envs/-/blob/main/ali-bj-ssh-secret.yml
+      
+      stages:
+        - name: 查看目录
+          script: ls -a
+          
+          # https://docs.cnb.cool/zh/plugins/public/tencentcom/scp
+        - name: 使用 scp 将文件上传到服务器
+          image: tencentcom/scp
+          settings:
+            host: $REMOTE_HOST
+            username: $REMOTE_USERNAME
+            key: $PRIVATE_KEY
+            port: $REMOTE_PORT
+            target: /home/zero/
+            source: ./dist
+
+          # https://docs.cnb.cool/zh/plugins/public/tencentcom/ssh
+        - name: 通过 ssh 执行命令
+          image: tencentcom/ssh
+          settings:
+            host:
+              - ${REMOTE_HOST}
+            username: ${REMOTE_USERNAME}
+            key: ${PRIVATE_KEY}
+            port: ${REMOTE_PORT}
+            command_timeout: 2m
+            script: |
+              cd /home/zero/
+              sudo rm -rf /usr/local/soft/nginx/html/tools/dist
+              sudo mv dist /usr/local/soft/nginx/html/tools/
