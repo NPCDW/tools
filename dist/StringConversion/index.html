@@ -57,6 +57,11 @@
                 <template #prepend>数据库字段</template>
             </el-input>
         </el-row>
+        <el-row>
+            <el-input v-model="target_str6" readonly placeholder="数据库字段">
+                <template #prepend>小写驼峰</template>
+            </el-input>
+        </el-row>
     </el-card>
     <el-card class="box-card" style="margin-top: 8px">
         <el-row>驼峰 / 横线 / 下划线</el-row>
@@ -142,6 +147,15 @@ const app = Vue.createApp({
                 return null;
             }
             return this.src_str.toUpperCase().replace(" ", "_").replace("-", "_");
+        },
+        target_str6() {
+            if (!this.src_str) {
+                return null;
+            }
+            return this.src_str.replace(/[\s_-]+/g, ' ')  // 替换所有空格、下划线、横线为空格
+                    .split(' ')                // 按空格分割成数组
+                    .map((word, index) => index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join('');
         },
         amountStr() {
             if (!this.amountNumber) {
