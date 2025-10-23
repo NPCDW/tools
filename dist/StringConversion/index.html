@@ -146,7 +146,7 @@ const app = Vue.createApp({
             if (!this.src_str) {
                 return null;
             }
-            return this.src_str.toUpperCase().replace(" ", "_").replace("-", "_");
+            return this.src_str.toUpperCase().replace(/[\s-\^\$\#\&\'\"\/\.\+\*]+/g, "_");
         },
         target_str6() {
             if (!this.src_str) {

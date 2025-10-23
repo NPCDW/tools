@@ -22,7 +22,7 @@
 </head>
 <body>
 <div id="el">
-    <el-input v-model="exam_json" style="width: 100%;" :rows="20" type="textarea" placeholder="Please input"></el-input>
+    <el-input v-model="exam_json" style="width: 100%;" :rows="20" type="textarea" placeholder="[{type:'',content:''},{},{}]"></el-input>
     <div style="margin: 10px 0;text-align: center">
         <el-button type="primary" @click="extract()">提取</el-button>
     </div>
@@ -41,7 +41,7 @@
             extract() {
                 this.exam_text = '角色扮演：你正在参加华为云微认证考试\n' +
                     '要求：通过华为云认证考试\n' +
-                    '我会给你一些题目，请直接输出答案，不要出现相关题目进行分析，也不要出现其他无关内容。\n' +
+                    '我会给你一些题目，请直接输出答案，不要出现题目分析过程，也不要出现其他无关内容。\n' +
                     '判断题请给出正确的选项，例如：true\n' +
                     '单选题请给出正确的选项编号，例如：2\n' +
                     '多选题请给出所有正确选项的编号，用空格隔开，例如：1 2 3 4\n'
