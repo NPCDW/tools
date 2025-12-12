@@ -7,8 +7,8 @@ $:
         - docker
       # 开发环境启动后会执行的任务
       stages:
-        - name: install dep
-          script: pnpm i
+        - name: start stage
+          script: echo "start stage"
       # 开发环境销毁前会执行该任务
       endStages:
         - name: end stage
