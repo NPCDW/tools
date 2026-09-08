@@ -1,7 +1,7 @@
 $:
   vscode:
     - docker:
-        image: docker.cnb.cool/my-codespace/dev-image/vue:latest
+        image: docker.cnb.cool/my-codespace/dev-image-build/vue:latest
       services:
         - vscode
         - docker
