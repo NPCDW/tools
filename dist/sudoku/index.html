@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数独解谜</title>
+    <link rel="stylesheet" href="../lib/vue3/element-plus.index.css"/>
+    <link rel="stylesheet" href="../lib/vue3/element-plus.css-vars.css"/>
+    <script src="../lib/vue3/vue.global.prod.js"></script>
+    <script src="../lib/vue3/element-plus.index.full.js"></script>
+    <script src="../lib/vue3/element-plus.index.iife.min.js"></script>
+    <style>
+        body { margin: 0; }
+        #el { width: 96%; max-width: 1180px; margin: 0 auto; padding: 12px 0 40px; }
+        .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+        .tips { margin: 8px 0; font-size: 13px; color: var(--el-color-info); }
+
+        .board { display: grid; grid-template-columns: repeat(9, 1fr); width: 468px; max-width: 100%;
+                 border: 2px solid var(--el-border-color-darker); background: var(--el-bg-color); }
+        .cell { position: relative; aspect-ratio: 1 / 1; box-sizing: border-box;
+                border-right: 1px solid var(--el-border-color); border-bottom: 1px solid var(--el-border-color);
+                display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+        .cell:nth-child(9n) { border-right: none; }
+        .cell.box-right { border-right: 2px solid var(--el-border-color-darker); }
+        .cell.box-bottom { border-bottom: 2px solid var(--el-border-color-darker); }
+        .cell .value { font-size: 26px; line-height: 1; font-weight: 600; }
+        .cell.given .value { color: var(--el-text-color-primary); }
+        .cell.filled .value { color: var(--el-color-primary); }
+        .cell.anchor .value { color: var(--el-color-danger); }
+        .cell.anchor { background: var(--el-color-danger-light-8); }
+        .cell.highlight { background: var(--el-color-warning-light-7); }
+        .cell.dimmed .value { visibility: hidden; }
+        .cell.reason-cell { box-shadow: inset 0 0 0 2px var(--el-color-warning); }
+        .cell.target-cell { box-shadow: inset 0 0 0 2px var(--el-color-success); }
+        .cell.selected { background: var(--el-color-primary-light-7); }
+
+        .cell input { width: 100%; height: 100%; border: none; outline: none; background: transparent;
+                      text-align: center; font-size: 26px; font-weight: 600; color: var(--el-color-primary); }
+        .cell.editable:hover { background: var(--el-color-primary-light-9); }
+        .cell .conflict { background: var(--el-color-danger-light-7); }
+        .cell.invalid { background: var(--el-color-danger-light-5); }
+
+        .pane { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+        .steps { flex: 1; min-width: 320px; }
+        .step-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+        .step-item:hover { background: var(--el-fill-color-light); }
+        .step-item.active { background: var(--el-color-primary-light-8); border-color: var(--el-color-primary); }
+        .step-item.trial { border-left: 3px solid var(--el-color-warning); }
+        .step-item.back { border-left: 3px solid var(--el-color-info); opacity: .75; }
+        .step-no { font-weight: 700; margin-right: 6px; color: var(--el-text-color-secondary); }
+        /* 深色主题下 Element Plus 的 light 标签文字偏暗，这里强制用亮色保证可读 */
+        .step-tag.el-tag { color: var(--el-text-color-primary); border-color: transparent; }
+        .step-reason { font-size: 13px; line-height: 1.6; margin-top: 4px; }
+        .step-check { font-size: 12px; color: var(--el-text-color-secondary); margin-top: 2px; }
+        .legend { font-size: 12px; color: var(--el-text-color-secondary); margin-top: 8px; line-height: 1.8; }
+        .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 4px;
+                    vertical-align: -1px; border: 1px solid var(--el-border-color); }
+    </style>
+</head>
+<body>
+<div id="el" ref="root">
+    <h2 style="margin: 12px 0">数独解谜</h2>
+
+    <div class="toolbar">
+        <el-button type="primary" @click="solveAll" :disabled="loading">全部解出</el-button>
+        <el-button @click="solveNext" :disabled="loading || !canSolve">下一个</el-button>
+        <el-button @click="resetBoard">清空</el-button>
+        <el-button @click="loadExample">示例</el-button>
+        <el-input-number v-model="speed" :min="100" :max="2000" :step="100" size="small"
+                         controls-position="right" style="width: 130px" title="自动播放间隔（毫秒）"></el-input-number>
+        <el-button v-if="!playing" @click="play" :disabled="!hasSteps">自动播放</el-button>
+        <el-button v-else @click="pause">暂停</el-button>
+    </div>
+
+    <div class="tips">
+        还没开始吗？在格子里输入已知数字（1-9），至少填 17 个才有唯一解。
+        少于 17 个数字的数独不可能有唯一解。
+    </div>
+
+    <el-alert v-if="message" :title="message" :type="messageType" show-icon :closable="false"
+              style="margin-bottom: 10px"></el-alert>
+
+    <div class="pane">
+        <div>
+            <div class="board">
+                <div v-for="(cell, i) in cells" :key="i"
+                     class="cell"
+                     :class="cellClass(i)"
+                     @click="selectStepFromCell(i)">
+                    <input v-if="isEditable(i)" :value="cell.input" maxlength="1" inputmode="numeric"
+                           @input="onCellInput(i, $event)" @keydown="onCellKeydown(i, $event)"/>
+                    <span v-else class="value">{{ displayValue(i) }}</span>
+                </div>
+            </div>
+            <div class="legend">
+                <div><i style="background: var(--el-color-danger-light-8)"></i>这一步确定填入的数字</div>
+                <div><i style="background: var(--el-color-warning-light-7)"></i>本步推理涉及的格子（被排除的候选）</div>
+                <div><i style="background: var(--el-color-primary-light-7)"></i>选中的格子</div>
+                <div>选中某一步后，这一步之后的数字会被隐藏，只显示到该步为止。</div>
+            </div>
+        </div>
+
+        <div class="steps">
+            <div style="font-weight: 700; margin-bottom: 6px">
+                推理步骤
+                <span v-if="steps.length" style="font-weight: 400; font-size: 13px; color: var(--el-text-color-secondary)">
+                    （共 {{ steps.length }} 步，当前第 {{ cursor }} 步）
+                </span>
+            </div>
+            <div style="max-height: 620px; overflow: auto; border: 1px solid var(--el-border-color); border-radius: 6px">
+                <div v-if="!steps.length" style="padding: 16px; color: var(--el-text-color-secondary); font-size: 13px">
+                    填入题目后点「全部解出」，这里会逐步列出每一步为什么这么填。
+                </div>
+                <div v-for="(step, i) in steps" :key="step.no"
+                     class="step-item"
+                     :class="[stepClass(step), { active: cursor === i + 1 }]"
+                     @click="selectStep(i + 1)">
+                    <div>
+                        <span class="step-no">{{ step.no }}.</span>
+                        <el-tag class="step-tag" size="small" :type="tagType(step)">{{ step.label }}</el-tag>
+                        <span v-if="step.action === 'place' || step.action === 'trial'">
+                            {{ cellName(step.cell) }} = {{ step.digit }}
+                        </span>
+                    </div>
+                    <div class="step-reason">{{ step.reason }}</div>
+                    <div v-if="step.check" class="step-check">依据：{{ step.check }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/sudoku-solver.js"></script>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                // 每格：given 原始题目给定值，input 用户输入，editable 是否可编辑
+                cells: [],
+                steps: [],
+                finalValues: null,
+                cursor: 0,          // 当前选中到第几步（0 表示未选中）
+                message: '',
+                messageType: 'info',
+                loading: false,
+                playing: false,
+                speed: 600,
+                timer: null,
+                selectedCell: -1
+            };
+        },
+        computed: {
+            givenCount() {
+                return this.cells.filter(c => c.input !== '' && c.input !== null).length;
+            },
+            hasSteps() {
+                return this.steps.length > 0;
+            },
+            canSolve() {
+                return this.givenCount > 0 && (!this.steps.length || this.cursor < this.steps.length);
+            },
+            // 光标之前的步骤值：用于「隐藏后续步骤数字」
+            visibleValues() {
+                if (!this.steps.length) return null;
+                if (this.cursor === 0) return null;
+                return this.steps[this.cursor - 1].values;
+            },
+            // 本步影响的格子：用于着色
+            activeStep() {
+                if (!this.steps.length || this.cursor === 0) return null;
+                return this.steps[this.cursor - 1];
+            }
+        },
+        created() {
+            this.resetBoard();
+        },
+        methods: {
+            cellName(idx) {
+                return SudokuSolver.cellName(idx);
+            },
+            resetBoard() {
+                this.pause();
+                this.cells = [];
+                for (let i = 0; i < 81; i++) {
+                    this.cells.push({ input: '', value: 0, given: false, editable: true });
+                }
+                this.steps = [];
+                this.finalValues = null;
+                this.cursor = 0;
+                this.selectedCell = -1;
+                this.setMessage('');
+            },
+            loadExample() {
+                const p = '003020600900305001001806400008102900700000008006708200002609500800203009005010300';
+                this.resetBoard();
+                for (let i = 0; i < 81; i++) {
+                    const v = +p[i];
+                    this.cells[i].input = v ? String(v) : '';
+                }
+                this.setMessage('已载入示例题目，共 ' + this.givenCount + ' 个数字', 'success');
+            },
+            setMessage(text, type) {
+                this.message = text;
+                this.messageType = type || 'info';
+            },
+            onCellInput(i, event) {
+                // 只保留 1-9，其他字符直接丢弃
+                let v = String(event.target.value || '').replace(/[^1-9]/g, '');
+                v = v.slice(-1);
+                this.cells[i].input = v;
+                event.target.value = v;
+                // 改动题目后旧的解就没意义了
+                if (this.steps.length) {
+                    this.steps = [];
+                    this.finalValues = null;
+                    this.cursor = 0;
+                }
+            },
+            onCellKeydown(i, event) {
+                if (event.key === 'Backspace') {
+                    this.cells[i].input = '';
+                    event.target.value = '';
+                }
+            },
+            // 读取题目为 number[81]
+            readPuzzle() {
+                const values = new Array(81).fill(0);
+                for (let i = 0; i < 81; i++) {
+                    const v = parseInt(this.cells[i].input, 10);
+                    values[i] = isNaN(v) ? 0 : v;
+                }
+                return values;
+            },
+            checkGivenCount() {
+                if (this.givenCount < 17) {
+                    this.setMessage('当前只有 ' + this.givenCount + ' 个数字：数独至少要 17 个已知数字才可能有唯一解，请继续补充。', 'warning');
+                    return false;
+                }
+                return true;
+            },
+            solveAll() {
+                if (!this.checkGivenCount()) return;
+                const puzzle = this.readPuzzle();
+
+                // 输入本身冲突时明确提示，而不是报「无解」
+                const dup = SudokuSolver.validate(puzzle);
+                if (dup.length) {
+                    this.steps = [];
+                    this.finalValues = null;
+                    this.cursor = 0;
+                    this.setMessage('题目存在冲突：' + dup[0], 'error');
+                    return;
+                }
+                if (SudokuSolver.countSolutions(puzzle) === 0) {
+                    this.steps = [];
+                    this.finalValues = null;
+                    this.cursor = 0;
+                    this.setMessage('这道题无解：按数独规则怎么填都会矛盾。', 'error');
+                    return;
+                }
+
+                this.loading = true;
+                // 让浏览器先把 loading 画出来，再跑求解
+                setTimeout(() => {
+                    try {
+                        const res = SudokuSolver.solve(puzzle);
+                        if (!res.solved) {
+                            this.setMessage('未能解出该题目。', 'error');
+                            return;
+                        }
+                        this.steps = res.steps;
+                        this.finalValues = res.finalValues;
+                        // 光标归零，用户点「下一个」就能从头逐步走
+                        this.cursor = 0;
+                        this.setMessage('已解出，共 ' + this.steps.length + ' 步。点「下一个」逐步看推理，或点右侧任意一步直接跳过去。', 'success');
+                    } finally {
+                        this.loading = false;
+                    }
+                }, 30);
+            },
+            solveNext() {
+                if (!this.steps.length) {
+                    this.solveAll();
+                    return;
+                }
+                if (this.cursor >= this.steps.length) {
+                    this.setMessage('已经到最后一步了，点「清空」可以开始新的一题。', 'info');
+                    return;
+                }
+                this.cursor++;
+                this.scrollToCursor();
+                if (this.cursor === this.steps.length) {
+                    this.setMessage('全部 ' + this.steps.length + ' 步已展示完毕。', 'success');
+                } else {
+                    this.setMessage('已走到第 ' + this.cursor + ' 步，共 ' + this.steps.length + ' 步。', 'info');
+                }
+            },
+            selectStep(no) {
+                this.cursor = no;
+                this.pause();
+                this.scrollToCursor();
+            },
+            // 点击格子：跳到「第一次填这个格子」的那一步
+            selectStepFromCell(idx) {
+                if (!this.steps.length) {
+                    this.selectedCell = this.selectedCell === idx ? -1 : idx;
+                    return;
+                }
+                this.selectedCell = idx;
+                const hit = this.steps.find(st => (st.action === 'place' || st.action === 'trial') && st.cell === idx);
+                if (hit) {
+                    this.selectStep(hit.no);
+                }
+            },
+            scrollToCursor() {
+                this.$nextTick(() => {
+                    const root = this.$refs.root;
+                    if (!root || !root.querySelectorAll) return;
+                    const items = root.querySelectorAll('.step-item');
+                    if (items[this.cursor - 1]) items[this.cursor - 1].scrollIntoView({ block: 'nearest' });
+                });
+            },
+            play() {
+                if (!this.steps.length) return;
+                if (this.cursor >= this.steps.length) this.cursor = 0;
+                this.playing = true;
+                this.timer = setInterval(() => {
+                    if (this.cursor >= this.steps.length) {
+                        this.pause();
+                        return;
+                    }
+                    this.cursor++;
+                    this.scrollToCursor();
+                }, this.speed);
+            },
+            pause() {
+                this.playing = false;
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }
+            },
+            // 每格显示的值：给定值 > 光标之前的步骤值 > 空
+            // 没有解的时候，空格子可以继续输入；一旦开始解，就把显示交给步骤值
+            isEditable(i) {
+                if (this.cells[i].input) return false;
+                return !this.visibleValues;
+            },
+            displayValue(i) {
+                if (this.cells[i].input) return this.cells[i].input;
+                if (this.visibleValues) return this.visibleValues[i] || '';
+                return '';
+            },
+            cellClass(i) {
+                const cls = [];
+                const row = Math.floor(i / 9), col = i % 9;
+                if (col % 3 === 2 && col !== 8) cls.push('box-right');
+                if (row % 3 === 2 && row !== 8) cls.push('box-bottom');
+                if (this.isEditable(i)) cls.push('editable');
+                if (this.cells[i].input) cls.push('given');
+                else if (this.displayValue(i)) cls.push('filled');
+                if (this.selectedCell === i) cls.push('selected');
+
+                const step = this.activeStep;
+                if (!step) return cls;
+
+                // 光标停在这一步时，这一步之后的填数全部隐藏
+                if (!this.visibleValues[i]) cls.push('dimmed');
+
+                if ((step.action === 'place' || step.action === 'trial') && step.cell === i) cls.push('anchor');
+                if (step.impacts.some(imp => imp.type === 'eliminate' && imp.cells.indexOf(i) >= 0)) cls.push('highlight');
+                return cls;
+            },
+            stepClass(step) {
+                if (step.action === 'trial') return 'trial';
+                if (step.action === 'back') return 'back';
+                return '';
+            },
+            tagType(step) {
+                if (step.action === 'trial') return 'warning';
+                if (step.action === 'back') return 'info';
+                if (step.action === 'place') return 'success';
+                // 排除候选类的技巧用 warning 色，在深色主题下比 primary 更清楚
+                return 'warning';
+            }
+        }
+    });
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component);
+    }
+    app.mount('#el');
+</script>
+</body>
+</html>
