@@ -38,14 +38,16 @@
             .col-labels span { font-size: 10px; }
             .row-labels span { font-size: 10px; }
         }
-        .cell .value, .cell input { font-size: clamp(15px, 5.6vw, 26px); }
+        /* 输入态与显示态都用绝对定位撑满格子：内容不参与行盒计算，行高就不会被撑开 */
         .cell { position: relative; box-sizing: border-box; min-width: 0; min-height: 0; overflow: hidden;
                 border-right: 1px solid var(--el-border-color); border-bottom: 1px solid var(--el-border-color);
-                display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+                display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none;
+                font-size: clamp(15px, 5.6vw, 26px); line-height: 1; }
         .cell:nth-child(9n) { border-right: none; }
         .cell.box-right { border-right: 2px solid var(--el-border-color-darker); }
         .cell.box-bottom { border-bottom: 2px solid var(--el-border-color-darker); }
-        .cell .value { line-height: 1; font-weight: 600; }
+        .cell .value { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                       line-height: 1; font-weight: 600; }
         .cell.given .value { color: var(--el-text-color-primary); }
         .cell.filled .value { color: var(--el-color-primary); }
         .cell.anchor .value { color: var(--el-color-danger); }
@@ -55,6 +57,7 @@
         .cell.reason-cell { box-shadow: inset 0 0 0 2px var(--el-color-warning); }
         .cell.target-cell { box-shadow: inset 0 0 0 2px var(--el-color-success); }
         .cell.selected { background: var(--el-color-primary-light-7); }
+        .cell.editing { box-shadow: inset 0 0 0 2px var(--el-color-primary); }
 
         /* 输入框绝对定位，不参与格子高度计算：否则有 input 的行会被撑高，格子边框错位 */
         .cell input { position: absolute; inset: 0; width: 100%; height: 100%; box-sizing: border-box;
@@ -120,9 +123,11 @@
                          class="cell"
                          :class="cellClass(i)"
                          @click="selectStepFromCell(i)">
-                        <input v-if="isEditable(i)" :value="cell.input" maxlength="1" inputmode="numeric"
-                               @input="onCellInput(i, $event)" @keydown="onCellKeydown(i, $event)"/>
-                        <span v-else class="value">{{ displayValue(i) }}</span>
+                        <input v-if="isEditable(i)" :ref="'cellInput' + i" :value="cell.input"
+                               inputmode="numeric" autocomplete="off"
+                               @input="onCellInput(i, $event)" @keydown="onCellKeydown(i, $event)"
+                               @focus="onCellFocus(i)"/>
+                        <span v-else class="value" @click.stop="editCell(i)">{{ displayValue(i) }}</span>
                     </div>
                 </div>
             </div>
@@ -181,7 +186,9 @@
                 playing: false,
                 speed: 600,
                 timer: null,
-                selectedCell: -1
+                selectedCell: -1,
+                // 当前正在编辑的格子：已填数字的格子点一下就能改成可编辑
+                editingCell: -1
             };
         },
         computed: {
@@ -227,6 +234,7 @@
                 this.finalValues = null;
                 this.cursor = 0;
                 this.selectedCell = -1;
+                this.editingCell = -1;
                 this.setMessage('');
             },
             loadExample() {
@@ -236,29 +244,78 @@
                     const v = +p[i];
                     this.cells[i].input = v ? String(v) : '';
                 }
+                this.editingCell = -1;
                 this.setMessage('已载入示例题目，共 ' + this.givenCount + ' 个数字', 'success');
             },
             setMessage(text, type) {
                 this.message = text;
                 this.messageType = type || 'info';
             },
+            // 兼容粘贴 / 输入法：只保留最后一位 1-9，多余字符丢弃，不跳格
             onCellInput(i, event) {
-                // 只保留 1-9，其他字符直接丢弃
-                let v = String(event.target.value || '').replace(/[^1-9]/g, '');
-                v = v.slice(-1);
+                const raw = String(event.target.value || '');
+                const digits = raw.replace(/[^1-9]/g, '');
+                this.setCellValue(i, raw === '' ? '' : digits.slice(-1));
+            },
+            /**
+             * 键盘直接接管，不再依赖 input 事件后的字符清理：
+             * - 1-9：覆盖当前格子的值（不管原来有没有），光标不前移、不跳格
+             * - Backspace/Delete/0：清空当前格
+             * - 其余可打印字符：直接吞掉，避免出现「删不掉」的错觉
+             */
+            onCellKeydown(i, event) {
+                if (event.ctrlKey || event.metaKey || event.altKey) return;
+                const key = event.key;
+                if (key === 'Backspace' || key === 'Delete' || key === '0') {
+                    event.preventDefault();
+                    this.setCellValue(i, '');
+                    return;
+                }
+                if (/^[1-9]$/.test(key)) {
+                    event.preventDefault();
+                    this.setCellValue(i, key);
+                    return;
+                }
+                if (key.length === 1) event.preventDefault();
+            },
+            // 统一写入格子的入口：同步 input 事件路径与键盘路径
+            setCellValue(i, v) {
                 this.cells[i].input = v;
-                event.target.value = v;
-                // 改动题目后旧的解就没意义了
-                if (this.steps.length) {
+                const el = this.$refs['cellInput' + i];
+                const node = Array.isArray(el) ? el[0] : el;
+                if (node && node.value !== v) node.value = v;
+                this.invalidateSolution();
+            },
+            // 点击已经填好的格子时，把它临时还原成可编辑状态，方便改错
+            editCell(i) {
+                if (this.cells[i].input) {
+                    this.editingCell = i;
+                    this.selectedCell = i;
+                    this.$nextTick(() => this.focusCell(i));
+                    return;
+                }
+                this.selectStepFromCell(i);
+            },
+            onCellFocus(i) {
+                this.editingCell = i;
+                this.selectedCell = i;
+            },
+            focusCell(i) {
+                const el = this.$refs['cellInput' + i];
+                const node = Array.isArray(el) ? el[0] : el;
+                if (!node) return;
+                if (node.focus) node.focus();
+                // maxlength=1 时把光标放末尾会让新输入被挡掉；全选后输入即覆盖，符合「改一个数字」的直觉
+                if (node.select && typeof node.value === 'string' && node.value) {
+                    node.select();
+                }
+            },
+            // 题目一改，旧的解和步骤立刻作废
+            invalidateSolution() {
+                if (this.steps.length || this.finalValues) {
                     this.steps = [];
                     this.finalValues = null;
                     this.cursor = 0;
-                }
-            },
-            onCellKeydown(i, event) {
-                if (event.key === 'Backspace') {
-                    this.cells[i].input = '';
-                    event.target.value = '';
                 }
             },
             // 读取题目为 number[81]
@@ -341,6 +398,7 @@
             },
             // 点击格子：跳到「第一次填这个格子」的那一步
             selectStepFromCell(idx) {
+                if (this.editingCell !== -1 && this.editingCell !== idx) this.editingCell = -1;
                 if (!this.steps.length) {
                     this.selectedCell = this.selectedCell === idx ? -1 : idx;
                     return;
@@ -380,8 +438,12 @@
                 }
             },
             // 每格显示的值：给定值 > 光标之前的步骤值 > 空
-            // 没有解的时候，空格子可以继续输入；一旦开始解，就把显示交给步骤值
+            // 编辑规则：
+            //   - 题目格子（有 input）默认显示为文本，点一下可切回输入框修改
+            //   - 空格子在有解展示时交给步骤值显示，避免把讲解内容当题目改掉
+            //   - 没有解展示时，空格子始终可输入
             isEditable(i) {
+                if (this.editingCell === i) return true;
                 if (this.cells[i].input) return false;
                 return !this.visibleValues;
             },
@@ -399,12 +461,13 @@
                 if (this.cells[i].input) cls.push('given');
                 else if (this.displayValue(i)) cls.push('filled');
                 if (this.selectedCell === i) cls.push('selected');
+                if (this.editingCell === i) cls.push('editing');
 
                 const step = this.activeStep;
                 if (!step) return cls;
 
-                // 光标停在这一步时，这一步之后的填数全部隐藏
-                if (!this.visibleValues[i]) cls.push('dimmed');
+                // 光标停在这一步时，这一步之后的填数全部隐藏（正在编辑的格子除外）
+                if (!this.visibleValues[i] && this.editingCell !== i) cls.push('dimmed');
 
                 if ((step.action === 'place' || step.action === 'trial') && step.cell === i) cls.push('anchor');
                 if (step.impacts.some(imp => imp.type === 'eliminate' && imp.cells.indexOf(i) >= 0)) cls.push('highlight');
