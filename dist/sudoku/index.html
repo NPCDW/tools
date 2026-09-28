@@ -117,8 +117,9 @@
         还没开始吗？在格子里输入已知数字（1-9），至少填 17 个才有唯一解。
         少于 17 个数字的数独不可能有唯一解。<br/>
         键盘 1-9 直接覆盖当前格，Backspace / Delete / 0 清空；点「全部解出」后棋盘会锁定，需改题请先「清空」。<br/>
-        「复制」把当前棋盘按 <code>1 - 5 - - 3 - 4 -</code> 的样式放入剪贴板；「粘贴」可从剪贴板导入整盘题目，
-        也支持把整盘题目直接粘进任意格子（兼容多行、带 - 的格式）。
+        「复制」把当前棋盘按 <code>- - 3 - 2 - 6 - -</code> 的样式放入剪贴板（9 行 × 9 格，空格为 -）；
+        「粘贴」可从剪贴板导入整盘题目，也支持把整盘题目直接粘进任意格子，
+        兼容多行、空格或紧凑分隔、点号与 0 占位、带竖线表格等写法。
     </div>
 
     <el-alert v-if="message" :title="message" :type="messageType" show-icon :closable="false"
@@ -161,7 +162,7 @@
                 <div>选中某一步后，这一步之后的数字会被隐藏，只显示到该步为止。</div>
                 <div>点「全部解出」开始推理后棋盘会锁定，要改题目请点「清空」。</div>
                 <div>棋盘左边 A-I 表示行、上边 1-9 表示列，格子坐标为「行名+列号」，如 A1、C5。</div>
-                <div>「复制」复制的是棋盘当前显示的数字（空格为 -），粘贴回来可以直接还原题目。</div>
+                <div>「复制」复制的是棋盘当前显示的数字（空格为 -），每行 9 格，粘贴回来可以直接还原题目。</div>
             </div>
         </div>
 
@@ -287,25 +288,33 @@
                 this.messageType = type || 'info';
             },
             /**
-             * 复制当前棋盘上「看得见」的数字：
-             * 每行 9 格，数字之间用 ' - ' 连接，空格用 '-' 占位，
+             * 复制当前棋盘上「看得见」的数字，每行 9 格、格与格之间一个空格：
+             * 空格子写 '-'，如 '- - 3 - 2 - 6 - -'（9 格共 17 个字符）。
+             * `cellText` 是每格的文字，0/空/'0'/'-' 统一归一成 '-'，
+             * 避免「候选里的 0」和「空格占位」两种写法混在一起。
              * 与题目/推理回放/解出一致，都只认棋盘正在显示的值。
              * 不支持剪贴板 API 时退化为 execCommand('copy')。
              */
+            copyLine(cells) {
+                return cells.map(c => {
+                    const t = String(c == null ? '' : c).trim();
+                    return t && t !== '0' && !/^-+$/.test(t) ? t : '-';
+                }).join(' ');
+            },
             boardText() {
                 const lines = [];
                 for (let r = 0; r < 9; r++) {
                     const row = [];
                     for (let c = 0; c < 9; c++) {
-                        row.push(this.valueAt(r * 9 + c) || '-');
+                        row.push(this.valueAt(r * 9 + c));
                     }
-                    lines.push(row.join(' - '));
+                    lines.push(this.copyLine(row));
                 }
                 return lines.join('\n');
             },
             copyBoard() {
                 const text = this.boardText();
-                const done = () => this.setMessage('已复制当前棋盘（9 行 × 9 格，空格为 -）。', 'success');
+                const done = () => this.setMessage('已复制当前棋盘（9 行 × 9 格，空格为 -，格与格之间一个空格）。', 'success');
                 const fallback = () => {
                     const ta = document.createElement('textarea');
                     ta.value = text;
@@ -334,8 +343,9 @@
             },
             /**
              * 一行文本 → 数字数组（每格一个值，0 表示空格）。
-             * 难点：' - ' 写法里 '-' 既是分隔符又是空格占位（'1 - 5' 是 2 格而非 3 格），
-             * 单看文本无法唯一确定，因此列出几种合理切法，优先取恰好 9 格的解释。
+             * 难点：'-' 既是分隔符又是空格占位（'1 - 5' 是 2 格而非 3 格），单看文本
+             * 无法唯一确定，所以按格式从确定到宽松列出几种切法，优先取恰好 9 格的解释：
+             * 紧凑字符流 → 空白切格 → 本页「复制」的单空格写法 → 固定宽度表格 → 宽松兜底。
              * 返回 null 表示这行不含任何格子信息（如坐标标注行）。
              */
             parseBoardRow(line) {
@@ -346,22 +356,61 @@
                     const m = t.match(/[1-9]/);
                     return m ? +m[0] : 0;
                 };
-                const toks = trimmed.split(/[\s,;]+/).filter(t => t.length);
+                const tokens = trimmed.split(/[\s,;]+/).filter(t => t.length);
+                // 数字占位符（'-' / '.' / '0'）与数字一样，都是「一格」
+                const isCellToken = t => /^[0-9-]+$/.test(t) && (t.length === 1 || /^-+$/.test(t));
+
                 const cands = [];
-                // ① ' - ' 交替写法（本页「复制」的输出格式）：token 数为 2n-1，
-                //    偶数位是格子、奇数位是分隔符，'1 - 5 - - 3' → 5 格
-                if (toks.length % 2 === 1) {
-                    cands.push(toks.filter((_, i) => i % 2 === 0).map(toInt));
+                if (trimmed.length === 9) {
+                    // ① 紧凑写法：整行恰好 9 个字符，横向一定是 9 格
+                    const compact = [];
+                    for (const ch of trimmed) {
+                        if (ch >= '1' && ch <= '9') compact.push(+ch);
+                        else if (ch === '0' || ch === '-') compact.push(0);
+                    }
+                    cands.push(compact);
                 }
-                // ② token 直接当格：'1 - 5 - - 3 - 4 -' 每段一格的写法
-                cands.push(toks.map(toInt));
-                // ③ 紧凑写法（无空白）：逐字符扫描，'0'/'-' 为空格
-                const compact = [];
-                for (const ch of trimmed) {
-                    if (ch >= '1' && ch <= '9') compact.push(+ch);
-                    else if (ch === '0' || ch === '-') compact.push(0);
+                // ①b 没空白、又不只 9 字符：逐字符扫，'-' 与 '0' 都占一格
+                //    （'9--------3' 这类把空格子写成 '-' 的紧凑写法）
+                if (!/[\s,;]/.test(trimmed)) {
+                    cands.push(trimmed.split('').map(c => (c === '-' || c === '0' ? 0 : +c)));
                 }
-                cands.push(compact);
+                // ② 每个 token 就是一格（单空格分隔、'-' 占位，即本页「复制」的格式）
+                cands.push(tokens.map(toInt));
+                // ③ ' - ' 交替写法：token 数为 2n-1，偶数位是格子、奇数位是分隔符
+                //    （旧版「复制」的输出，保持兼容）
+                if (tokens.length % 2 === 1 && tokens.length > 1 && tokens.filter(t => isCellToken(t)).length >= tokens.length / 2) {
+                    cands.push(tokens.filter((_, i) => i % 2 === 0).map(toInt));
+                }
+                // ④ 所有 token 都是单格记号（'-' 也算一格）：'1 2 3 4 5 6 7 8 9'
+                if (tokens.every(isCellToken)) {
+                    cands.push(tokens.map(toInt));
+                } else {
+                    // ⑤ 固定宽度表格：'- - - - 3 - - - 2 - - - 6 - - - -' 之类
+                    //    横向按「连续空白只算 1 个分隔」切，再靠 9 格约束横向定宽度
+                    const fw = [];
+                    for (const t of trimmed.split(/[ \t]+/)) {
+                        if (!t.length) continue;
+                        if (/^[0-9-]+$/.test(t)) t.split('').forEach(ch => fw.push(ch === '0' || ch === '-' ? 0 : +ch));
+                    }
+                    cands.push(fw);
+                    const fw2 = [];
+                    for (const t of trimmed.split(/[ \t]+/)) {
+                        if (t.length) fw2.push(t === '-' ? 0 : toInt(t));
+                    }
+                    cands.push(fw2);
+                }
+                // ⑥ 宽松兜底：'-' 既当分隔符又当占位，'1 - 5 - - 3' → 3 格
+                if (/[\s,;]/.test(trimmed)) {
+                    const loose = [];
+                    let expectCell = true;
+                    for (const ch of trimmed) {
+                        if (ch === ' ' || ch === '\t' || ch === ',' || ch === ';') { expectCell = true; continue; }
+                        if (ch === '-' && expectCell) { loose.push(0); expectCell = false; continue; }
+                        if (ch >= '0' && ch <= '9') { loose.push(+ch); expectCell = false; }
+                    }
+                    cands.push(loose);
+                }
                 // 优先恰好 9 格的解释；否则退回最长候选，由上层按 9 个一组切
                 const exact = cands.find(a => a.length === 9);
                 if (exact) return exact;
@@ -422,7 +471,7 @@
                     this.setMessage('棋盘已锁定，粘贴题目请先点「清空」。', 'warning');
                     return;
                 }
-                const manual = () => this.setMessage('无法直接读取剪贴板：请把题目粘到任意格子里再试（支持多行、含 - 的格式）。', 'info');
+                const manual = () => this.setMessage('无法直接读取剪贴板：请把题目粘到任意格子里再试（支持多行、空格或 - 分隔的格式）。', 'info');
                 if (navigator.clipboard && navigator.clipboard.readText) {
                     navigator.clipboard.readText().then(text => {
                         if (!text || !text.trim()) {
