@@ -109,7 +109,7 @@
         <el-button @click="loadExample">示例</el-button>
         <el-button @click="copyBoard" :disabled="loading">复制</el-button>
         <el-button @click="pasteBoard" :disabled="loading || boardLocked">粘贴</el-button>
-        <el-input-number v-model="speed" :min="100" :max="2000" :step="100" size="small"
+        <el-input-number v-model="speed" :min="100" :max="2000" :step="100"
                          controls-position="right" style="width: 130px" title="自动播放间隔（毫秒）"></el-input-number>
         <el-button v-if="!playing" @click="play" :disabled="!hasSteps">自动播放</el-button>
         <el-button v-else @click="pause">暂停</el-button>
