@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数独解谜</title>
+    <link rel="stylesheet" href="../lib/vue3/element-plus.index.css"/>
+    <link rel="stylesheet" href="../lib/vue3/element-plus.css-vars.css"/>
+    <script src="../lib/vue3/vue.global.prod.js"></script>
+    <script src="../lib/vue3/element-plus.index.full.js"></script>
+    <script src="../lib/vue3/element-plus.index.iife.min.js"></script>
+    <style>
+        body { margin: 0; }
+        #el { width: 96%; max-width: 1180px; margin: 0 auto; padding: 12px 0 40px; }
+        .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+        .tips { margin: 8px 0; font-size: 13px; color: var(--el-color-info); }
+
+        /* 坐标系：左列标行名 A-I，上行标列号 1-9，与推理文案里的 A1 保持一致 */
+        /* 棋盘 + 坐标系一起按容器宽度自适应，窄屏不出现横向滚动 */
+        /* flex: 1 1 494px 让棋盘在窄屏也能撑满可用宽度（auto 基准会收缩到内容宽度） */
+        .board-wrap { display: grid; gap: 4px; flex: 1 1 494px; width: 100%; max-width: 494px;
+                      grid-template-columns: 22px minmax(0, 468px);
+                      grid-template-rows: 22px auto; }
+        .board-wrap .corner { grid-column: 1; grid-row: 1; width: 22px; height: 22px; }
+        .col-labels { grid-column: 2; grid-row: 1; display: grid; grid-template-columns: repeat(9, 1fr); }
+        .col-labels span { display: flex; align-items: center; justify-content: center; height: 22px;
+                           font-size: 12px; font-weight: 600; color: var(--el-text-color-secondary); }
+        .row-labels { grid-column: 1; grid-row: 2; display: grid; grid-template-rows: repeat(9, 1fr); }
+        .row-labels span { display: flex; align-items: center; justify-content: center; width: 22px;
+                           font-size: 12px; font-weight: 600; color: var(--el-text-color-secondary); }
+        .board { grid-column: 2; grid-row: 2; display: grid; grid-template-columns: repeat(9, 1fr);
+                 width: 100%; aspect-ratio: 1 / 1; border: 2px solid var(--el-border-color-darker);
+                 background: var(--el-bg-color); }
+        @media (max-width: 520px) {
+            .board-wrap { grid-template-columns: 18px minmax(0, 1fr); max-width: 100%; }
+            .board-wrap .corner, .row-labels span { width: 18px; }
+            .col-labels span { font-size: 10px; }
+            .row-labels span { font-size: 10px; }
+        }
+        /* 输入态与显示态都用绝对定位撑满格子：内容不参与行盒计算，行高就不会被撑开 */
+        .cell { position: relative; box-sizing: border-box; min-width: 0; min-height: 0; overflow: hidden;
+                border-right: 1px solid var(--el-border-color); border-bottom: 1px solid var(--el-border-color);
+                display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none;
+                font-size: clamp(15px, 5.6vw, 26px); line-height: 1; }
+        .cell:nth-child(9n) { border-right: none; }
+        .cell.box-right { border-right: 2px solid var(--el-border-color-darker); }
+        .cell.box-bottom { border-bottom: 2px solid var(--el-border-color-darker); }
+        .cell .value { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                       line-height: 1; font-weight: 600; }
+        .cell.given .value { color: var(--el-text-color-primary); }
+        .cell.filled .value { color: var(--el-color-primary); }
+        .cell.anchor .value { color: var(--el-color-danger); }
+        .cell.anchor { background: var(--el-color-danger-light-8); }
+        .cell.highlight { background: var(--el-color-warning-light-7); }
+        .cell.dimmed .value { visibility: hidden; }
+        .cell.reason-cell { box-shadow: inset 0 0 0 2px var(--el-color-warning); }
+        .cell.target-cell { box-shadow: inset 0 0 0 2px var(--el-color-success); }
+        .cell.selected { background: var(--el-color-primary-light-7); }
+        .cell.editing { box-shadow: inset 0 0 0 2px var(--el-color-primary); }
+        /* 方向键移动的当前格：虚线内描边，和点击编辑的实线描边区分开 */
+        .cell.cursor-cell { box-shadow: inset 0 0 0 2px var(--el-color-primary-light-3); }
+
+        /* 输入框绝对定位，不参与格子高度计算：否则有 input 的行会被撑高，格子边框错位 */
+        .cell input { position: absolute; inset: 0; width: 100%; height: 100%; box-sizing: border-box;
+                      border: none; outline: none; background: transparent; padding: 0; margin: 0;
+                      font: inherit;
+                      text-align: center; font-weight: 600; color: var(--el-color-primary); }
+        /* 鼠标悬停高亮：分三档
+           - .hl-line  ：所在行、列（淡）
+           - .hl-equal ：同行/列且数字相同（中）
+           - .hl-same  ：悬停格自身、以及同行/列且数字相同（最亮）
+           亮度越高越先声明，命中的后一条覆盖先一条 */
+        .cell.hl-line { background: var(--el-color-primary-light-9); }
+        .cell.hl-equal { background: var(--el-color-primary-light-7); }
+        .cell.hl-same { background: var(--el-color-primary-light-5); }
+        /* 悬停时统一用 inset 描边标出基准数字，不占用格子尺寸 */
+        .cell .value.hl-mark, .cell .hl-mark {
+            box-shadow: inset 0 0 0 2px var(--el-color-primary);
+        }
+        .cell .conflict { background: var(--el-color-danger-light-7); }
+        .cell.invalid { background: var(--el-color-danger-light-5); }
+
+        .pane { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+        .steps { flex: 1; min-width: 320px; }
+        .step-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+        .step-item:hover { background: var(--el-fill-color-light); }
+        .step-item.active { background: var(--el-color-primary-light-8); border-color: var(--el-color-primary); }
+        .step-item.trial { border-left: 3px solid var(--el-color-warning); }
+        .step-item.back { border-left: 3px solid var(--el-color-info); opacity: .75; }
+        .step-no { font-weight: 700; margin-right: 6px; color: var(--el-text-color-secondary); }
+        /* 深色主题下 Element Plus 的 light 标签文字偏暗，这里强制用亮色保证可读 */
+        .step-tag.el-tag { color: var(--el-text-color-primary); border-color: transparent; }
+        .step-reason { font-size: 13px; line-height: 1.6; margin-top: 4px; }
+        .step-check { font-size: 12px; color: var(--el-text-color-secondary); margin-top: 2px; }
+        .legend { font-size: 12px; color: var(--el-text-color-secondary); margin-top: 8px; line-height: 1.8; }
+        .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 4px;
+                    vertical-align: -1px; border: 1px solid var(--el-border-color); }
+    </style>
+</head>
+<body>
+<div id="el" ref="root">
+    <h2 style="margin: 12px 0">数独解谜</h2>
+
+    <div class="toolbar">
+        <el-button type="primary" @click="solveAll" :disabled="loading">全部解出</el-button>
+        <el-button @click="solveNext" :disabled="loading || !canSolve">下一个</el-button>
+        <el-button @click="resetBoard">清空</el-button>
+        <el-button @click="loadExample">示例</el-button>
+        <el-button @click="copyBoard" :disabled="loading">复制</el-button>
+        <el-button @click="pasteBoard" :disabled="loading || boardLocked">粘贴</el-button>
+        <el-input-number v-model="speed" :min="100" :max="2000" :step="100"
+                         controls-position="right" style="width: 130px" title="自动播放间隔（毫秒）"></el-input-number>
+        <el-button v-if="!playing" @click="play" :disabled="!hasSteps">自动播放</el-button>
+        <el-button v-else @click="pause">暂停</el-button>
+    </div>
+
+    <div class="tips">
+        还没开始吗？在格子里输入已知数字（1-9），至少填 17 个才有唯一解。
+        少于 17 个数字的数独不可能有唯一解。<br/>
+        键盘 1-9 直接覆盖当前格，Backspace / Delete / 0 清空；方向键 ↑↓←→ 在格子之间移动光标，可连续输入。<br/>
+        点「全部解出」后棋盘会锁定，方向键与数字键都不再响应，需改题请先「清空」。<br/>
+        「复制」把当前棋盘按 <code>- - 3 - 2 - 6 - -</code> 的样式放入剪贴板（9 行 × 9 格，空格为 -）；
+        「粘贴」可从剪贴板导入整盘题目，也支持把整盘题目直接粘进任意格子，
+        兼容多行、空格或紧凑分隔、点号与 0 占位、带竖线表格等写法。
+    </div>
+
+    <el-alert v-if="message" :title="message" :type="messageType" show-icon :closable="false"
+              style="margin-bottom: 10px"></el-alert>
+
+    <div class="pane">
+        <div>
+            <div class="board-wrap">
+                <div class="corner"></div>
+                <div class="col-labels">
+                    <span v-for="c in 9" :key="'c' + c">{{ c }}</span>
+                </div>
+                <div class="row-labels">
+                    <span v-for="r in 9" :key="'r' + r">{{ rowName(r - 1) }}</span>
+                </div>
+                <div class="board">
+                    <div v-for="(cell, i) in cells" :key="i"
+                         class="cell"
+                         :class="cellClass(i)"
+                         @click="selectStepFromCell(i)"
+                         @mouseenter="onCellEnter(i)"
+                         @mouseleave="onCellLeave(i)">
+                        <input v-if="isEditable(i)" :ref="'cellInput' + i" :value="cell.input"
+                               :class="{ 'hl-mark': hoverCell === i && valueAt(i) }"
+                               inputmode="numeric" autocomplete="off"
+                               @input="onCellInput(i, $event)" @keydown="onCellKeydown(i, $event)"
+                               @paste="onCellPaste(i, $event)" @focus="onCellFocus(i)"/>
+                        <span v-else class="value"
+                              :class="{ 'hl-mark': hoverCell === i && valueAt(i) }"
+                              @click.stop="editCell(i)">{{ displayValue(i) }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="legend">
+                <div><i style="background: var(--el-color-danger-light-8)"></i>这一步确定填入的数字</div>
+                <div><i style="background: var(--el-color-warning-light-7)"></i>本步推理涉及的格子（被排除的候选）</div>
+                <div><i style="background: var(--el-color-primary-light-7)"></i>选中的格子</div>
+                <div><i style="background: var(--el-color-primary-light-9)"></i>鼠标所在格子的行、列</div>
+                <div><i style="background: var(--el-color-primary-light-5)"></i>与悬停格子数字相同的格子（同行列时更亮）</div>
+                <div>选中某一步后，这一步之后的数字会被隐藏，只显示到该步为止。</div>
+                <div>点「全部解出」开始推理后棋盘会锁定：方向键与数字键都不再响应，要改题目请点「清空」。</div>
+                <div>解出前，方向键 ↑↓←→ 可在格子间移动光标，光标所在格用细描边标出，可直接输入数字。</div>
+                <div>棋盘左边 A-I 表示行、上边 1-9 表示列，格子坐标为「行名+列号」，如 A1、C5。</div>
+                <div>「复制」复制的是棋盘当前显示的数字（空格为 -），每行 9 格，粘贴回来可以直接还原题目。</div>
+            </div>
+        </div>
+
+        <div class="steps">
+            <div style="font-weight: 700; margin-bottom: 6px">
+                推理步骤
+                <span v-if="steps.length" style="font-weight: 400; font-size: 13px; color: var(--el-text-color-secondary)">
+                    （共 {{ steps.length }} 步，当前第 {{ cursor }} 步）
+                </span>
+            </div>
+            <div style="max-height: 620px; overflow: auto; border: 1px solid var(--el-border-color); border-radius: 6px">
+                <div v-if="!steps.length" style="padding: 16px; color: var(--el-text-color-secondary); font-size: 13px">
+                    填入题目后点「全部解出」，这里会逐步列出每一步为什么这么填。
+                </div>
+                <div v-for="(step, i) in steps" :key="step.no"
+                     class="step-item"
+                     :class="[stepClass(step), { active: cursor === i + 1 }]"
+                     @click="selectStep(i + 1)">
+                    <div>
+                        <span class="step-no">{{ step.no }}.</span>
+                        <el-tag class="step-tag" size="small" :type="tagType(step)">{{ step.label }}</el-tag>
+                        <span v-if="step.action === 'place' || step.action === 'trial'">
+                            {{ cellName(step.cell) }} = {{ step.digit }}
+                        </span>
+                    </div>
+                    <div class="step-reason">{{ step.reason }}</div>
+                    <div v-if="step.check" class="step-check">依据：{{ step.check }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/sudoku-solver.js"></script>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                // 每格：given 原始题目给定值，input 用户输入，editable 是否可编辑
+                cells: [],
+                steps: [],
+                finalValues: null,
+                cursor: 0,          // 当前选中到第几步（0 表示未选中）
+                message: '',
+                messageType: 'info',
+                loading: false,
+                playing: false,
+                speed: 600,
+                timer: null,
+                selectedCell: -1,
+                // 当前正在编辑的格子：已填数字的格子点一下就能改成可编辑
+                editingCell: -1,
+                // 已解出并展示推理结果：棋盘锁定，不可再编辑
+                solved: false,
+                // 鼠标悬停的格子，用于高亮所在行列；-1 表示没有悬停
+                hoverCell: -1,
+                // 方向键移动到的当前格：用于标出光标位置；-1 表示没有
+                cursorCell: -1
+            };
+        },
+        computed: {
+            givenCount() {
+                return this.cells.filter(c => c.input !== '' && c.input !== null).length;
+            },
+            hasSteps() {
+                return this.steps.length > 0;
+            },
+            canSolve() {
+                return this.givenCount > 0 && (!this.steps.length || this.cursor < this.steps.length);
+            },
+            // 棋盘是否锁定：解出后点击「全部解出」即锁定，只能「清空」重开
+            boardLocked() {
+                return this.solved;
+            },
+            // 光标之前的步骤值：用于「隐藏后续步骤数字」
+            visibleValues() {
+                if (!this.steps.length) return null;
+                if (this.cursor === 0) return null;
+                return this.steps[this.cursor - 1].values;
+            },
+            // 本步影响的格子：用于着色
+            activeStep() {
+                if (!this.steps.length || this.cursor === 0) return null;
+                return this.steps[this.cursor - 1];
+            }
+        },
+        created() {
+            this.resetBoard();
+        },
+        methods: {
+            cellName(idx) {
+                return SudokuSolver.cellName(idx);
+            },
+            // 行名与求解器一致（A-I），保证棋盘标注和推理文案对得上
+            rowName(r) {
+                return 'ABCDEFGHI'[r] || '';
+            },
+            resetBoard() {
+                this.pause();
+                this.cells = [];
+                for (let i = 0; i < 81; i++) {
+                    this.cells.push({ input: '', value: 0, given: false, editable: true });
+                }
+                this.steps = [];
+                this.finalValues = null;
+                this.cursor = 0;
+                this.selectedCell = -1;
+                this.editingCell = -1;
+                this.hoverCell = -1;
+                this.cursorCell = -1;
+                this.solved = false;
+                this.setMessage('');
+            },
+            loadExample() {
+                const p = '003020600900305001001806400008102900700000008006708200002609500800203009005010300';
+                this.resetBoard();
+                for (let i = 0; i < 81; i++) {
+                    const v = +p[i];
+                    this.cells[i].input = v ? String(v) : '';
+                }
+                this.editingCell = -1;
+                this.setMessage('已载入示例题目，共 ' + this.givenCount + ' 个数字', 'success');
+            },
+            setMessage(text, type) {
+                this.message = text;
+                this.messageType = type || 'info';
+            },
+            /**
+             * 复制当前棋盘上「看得见」的数字，每行 9 格、格与格之间一个空格：
+             * 空格子写 '-'，如 '- - 3 - 2 - 6 - -'（9 格共 17 个字符）。
+             * `cellText` 是每格的文字，0/空/'0'/'-' 统一归一成 '-'，
+             * 避免「候选里的 0」和「空格占位」两种写法混在一起。
+             * 与题目/推理回放/解出一致，都只认棋盘正在显示的值。
+             * 不支持剪贴板 API 时退化为 execCommand('copy')。
+             */
+            copyLine(cells) {
+                return cells.map(c => {
+                    const t = String(c == null ? '' : c).trim();
+                    return t && t !== '0' && !/^-+$/.test(t) ? t : '-';
+                }).join(' ');
+            },
+            boardText() {
+                const lines = [];
+                for (let r = 0; r < 9; r++) {
+                    const row = [];
+                    for (let c = 0; c < 9; c++) {
+                        row.push(this.valueAt(r * 9 + c));
+                    }
+                    lines.push(this.copyLine(row));
+                }
+                return lines.join('\n');
+            },
+            copyBoard() {
+                const text = this.boardText();
+                const done = () => this.setMessage('已复制当前棋盘（9 行 × 9 格，空格为 -，格与格之间一个空格）。', 'success');
+                const fallback = () => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.setAttribute('readonly', 'readonly');
+                    ta.style.position = 'fixed';
+                    ta.style.top = '-1000px';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    ta.setSelectionRange(0, text.length);
+                    let ok = false;
+                    try {
+                        ok = document.execCommand('copy');
+                    } catch (e) {
+                        ok = false;
+                    }
+                    document.body.removeChild(ta);
+                    if (ok) done();
+                    else this.setMessage('复制失败：当前环境不支持剪贴板，请手动选中后复制。', 'error');
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(done, fallback);
+                    return;
+                }
+                fallback();
+            },
+            /**
+             * 一行文本 → 数字数组（每格一个值，0 表示空格）。
+             * 难点：'-' 既是分隔符又是空格占位（'1 - 5' 是 2 格而非 3 格），单看文本
+             * 无法唯一确定，所以按格式从确定到宽松列出几种切法，优先取恰好 9 格的解释：
+             * 紧凑字符流 → 空白切格 → 本页「复制」的单空格写法 → 固定宽度表格 → 宽松兜底。
+             * 返回 null 表示这行不含任何格子信息（如坐标标注行）。
+             */
+            parseBoardRow(line) {
+                const trimmed = String(line == null ? '' : line).trim();
+                if (!/[0-9-]/.test(trimmed)) return null;
+                const toInt = t => {
+                    if (/^-+$/.test(t) || t === '0') return 0;
+                    const m = t.match(/[1-9]/);
+                    return m ? +m[0] : 0;
+                };
+                const tokens = trimmed.split(/[\s,;]+/).filter(t => t.length);
+                // 数字占位符（'-' / '.' / '0'）与数字一样，都是「一格」
+                const isCellToken = t => /^[0-9-]+$/.test(t) && (t.length === 1 || /^-+$/.test(t));
+
+                const cands = [];
+                if (trimmed.length === 9) {
+                    // ① 紧凑写法：整行恰好 9 个字符，横向一定是 9 格
+                    const compact = [];
+                    for (const ch of trimmed) {
+                        if (ch >= '1' && ch <= '9') compact.push(+ch);
+                        else if (ch === '0' || ch === '-') compact.push(0);
+                    }
+                    cands.push(compact);
+                }
+                // ①b 没空白、又不只 9 字符：逐字符扫，'-' 与 '0' 都占一格
+                //    （'9--------3' 这类把空格子写成 '-' 的紧凑写法）
+                if (!/[\s,;]/.test(trimmed)) {
+                    cands.push(trimmed.split('').map(c => (c === '-' || c === '0' ? 0 : +c)));
+                }
+                // ② 每个 token 就是一格（单空格分隔、'-' 占位，即本页「复制」的格式）
+                cands.push(tokens.map(toInt));
+                // ③ ' - ' 交替写法：token 数为 2n-1，偶数位是格子、奇数位是分隔符
+                //    （旧版「复制」的输出，保持兼容）
+                if (tokens.length % 2 === 1 && tokens.length > 1 && tokens.filter(t => isCellToken(t)).length >= tokens.length / 2) {
+                    cands.push(tokens.filter((_, i) => i % 2 === 0).map(toInt));
+                }
+                // ④ 所有 token 都是单格记号（'-' 也算一格）：'1 2 3 4 5 6 7 8 9'
+                if (tokens.every(isCellToken)) {
+                    cands.push(tokens.map(toInt));
+                } else {
+                    // ⑤ 固定宽度表格：'- - - - 3 - - - 2 - - - 6 - - - -' 之类
+                    //    横向按「连续空白只算 1 个分隔」切，再靠 9 格约束横向定宽度
+                    const fw = [];
+                    for (const t of trimmed.split(/[ \t]+/)) {
+                        if (!t.length) continue;
+                        if (/^[0-9-]+$/.test(t)) t.split('').forEach(ch => fw.push(ch === '0' || ch === '-' ? 0 : +ch));
+                    }
+                    cands.push(fw);
+                    const fw2 = [];
+                    for (const t of trimmed.split(/[ \t]+/)) {
+                        if (t.length) fw2.push(t === '-' ? 0 : toInt(t));
+                    }
+                    cands.push(fw2);
+                }
+                // ⑥ 宽松兜底：'-' 既当分隔符又当占位，'1 - 5 - - 3' → 3 格
+                if (/[\s,;]/.test(trimmed)) {
+                    const loose = [];
+                    let expectCell = true;
+                    for (const ch of trimmed) {
+                        if (ch === ' ' || ch === '\t' || ch === ',' || ch === ';') { expectCell = true; continue; }
+                        if (ch === '-' && expectCell) { loose.push(0); expectCell = false; continue; }
+                        if (ch >= '0' && ch <= '9') { loose.push(+ch); expectCell = false; }
+                    }
+                    cands.push(loose);
+                }
+                // 优先恰好 9 格的解释；否则退回最长候选，由上层按 9 个一组切
+                const exact = cands.find(a => a.length === 9);
+                if (exact) return exact;
+                return cands.reduce((a, b) => (b.length > a.length ? b : a), []);
+            },
+            parseBoardText(raw) {
+                const text = String(raw == null ? '' : raw).replace(/\r\n?/g, '\n');
+                const norm = text
+                    .replace(/[|│┃+╋]/g, ' ')
+                    .replace(/[.·_＊*]/g, '-')
+                    .replace(/[０-９]/g, ch => String('０１２３４５６７８９'.indexOf(ch)));
+                const rows = [];
+                norm.split('\n').forEach(line => {
+                    const digits = this.parseBoardRow(line);
+                    if (!digits || !digits.length) return;
+                    if (digits.length > 9) {
+                        for (let k = 0; k < digits.length; k += 9) rows.push(digits.slice(k, k + 9));
+                    } else {
+                        rows.push(digits);
+                    }
+                });
+                const cells = [];
+                for (let r = 0; r < 9; r++) {
+                    const src = rows[r] || [];
+                    for (let c = 0; c < 9; c++) {
+                        const v = src[c] || 0;
+                        cells.push(v >= 1 && v <= 9 ? v : 0);
+                    }
+                }
+                const count = cells.filter(v => v).length;
+                return { cells, count, rows: rows.length };
+            },
+            applyBoardText(raw, sourceLabel) {
+                const parsed = this.parseBoardText(raw);
+                if (!parsed.count) {
+                    this.setMessage((sourceLabel || '粘贴内容') + '里没有解析到任何数字（1-9），请检查格式。', 'warning');
+                    return false;
+                }
+                this.pause();
+                this.steps = [];
+                this.finalValues = null;
+                this.cursor = 0;
+                this.selectedCell = -1;
+                this.editingCell = -1;
+                this.hoverCell = -1;
+                this.cursorCell = -1;
+                this.solved = false;
+                this.commitPuzzle();
+                for (let i = 0; i < 81; i++) {
+                    this.cells[i].input = parsed.cells[i] ? String(parsed.cells[i]) : '';
+                }
+                this.setMessage('已从' + (sourceLabel || '粘贴内容') + '导入 ' + parsed.count +
+                    ' 个数字' + (parsed.count < 17 ? '：少于 17 个无法保证唯一解，请继续补充。' : '。'), 'success');
+                return true;
+            },
+            // 粘贴：优先读剪贴板 API；拿不到（非安全上下文/无权限）则提示手动粘贴到输入框
+            pasteBoard() {
+                if (this.boardLocked) {
+                    this.setMessage('棋盘已锁定，粘贴题目请先点「清空」。', 'warning');
+                    return;
+                }
+                const manual = () => this.setMessage('无法直接读取剪贴板：请把题目粘到任意格子里再试（支持多行、空格或 - 分隔的格式）。', 'info');
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    navigator.clipboard.readText().then(text => {
+                        if (!text || !text.trim()) {
+                            manual();
+                            return;
+                        }
+                        this.applyBoardText(text, '剪贴板');
+                    }, manual);
+                    return;
+                }
+                manual();
+            },
+            /**
+             * 输入框里的粘贴：粘贴内容是多行/带分隔符的整盘题目时，
+             * 按「导入整盘」处理；只有一位数字则退回普通输入，避免误吞。
+             */
+            onCellPaste(i, event) {
+                if (this.boardLocked) return;
+                const text = (event.clipboardData || window.clipboardData);
+                const raw = text ? text.getData('text') : '';
+                if (!raw) return;
+                const parsed = this.parseBoardText(raw);
+                const looksLikeBoard = /[\n]/.test(raw) || /[\s,;|│+\-]/.test(raw.trim());
+                if (parsed.count > 1 && (looksLikeBoard || parsed.rows > 1)) {
+                    event.preventDefault();
+                    this.applyBoardText(raw, '粘贴内容');
+                    return;
+                }
+                if (parsed.count === 1 && !looksLikeBoard) {
+                    event.preventDefault();
+                    this.setCellValue(i, String(parsed.cells.filter(v => v)[0]));
+                    return;
+                }
+                if (!parsed.count) {
+                    event.preventDefault();
+                    this.setMessage('粘贴内容里没有可识别的数字（1-9）。', 'warning');
+                }
+            },
+            // 兼容粘贴 / 输入法：只保留最后一位 1-9，多余字符丢弃，不跳格
+            onCellInput(i, event) {
+                const raw = String(event.target.value || '');
+                const digits = raw.replace(/[^1-9]/g, '');
+                this.setCellValue(i, raw === '' ? '' : digits.slice(-1));
+            },
+            /**
+             * 键盘直接接管，不再依赖 input 事件后的字符清理：
+             * - 1-9：覆盖当前格子的值（不管原来有没有），光标不前移、不跳格
+             * - Backspace/Delete/0：清空当前格
+             * - 其余可打印字符：直接吞掉，避免出现「删不掉」的错觉
+             */
+            onCellKeydown(i, event) {
+                // Ctrl/Cmd+V 让浏览器正常派发 paste 事件，由 onCellPaste 判断是整盘还是单格
+                if ((event.ctrlKey || event.metaKey) && String(event.key).toLowerCase() === 'v') return;
+                if (event.ctrlKey || event.metaKey || event.altKey) return;
+                const key = event.key;
+                if (this.isArrowKey(key)) {
+                    event.preventDefault();
+                    this.moveCursor(i, key);
+                    return;
+                }
+                if (key === 'Backspace' || key === 'Delete' || key === '0') {
+                    event.preventDefault();
+                    this.setCellValue(i, '');
+                    return;
+                }
+                if (/^[1-9]$/.test(key)) {
+                    event.preventDefault();
+                    this.setCellValue(i, key);
+                    return;
+                }
+                if (key.length === 1) event.preventDefault();
+            },
+            // 四个方向键：用来在棋盘格之间移动光标
+            isArrowKey(key) {
+                return key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight';
+            },
+            /**
+             * 方向键移动光标：把可编辑焦点挪到上/下/左/右相邻的格子。
+             * 只在「解出前」有意义 —— 解出后棋盘锁定，任何方向键都不再响应命令（由 isEditable 兜住）。
+             * 边界处夹住不绕行，棋盘外的一步直接忽略，光标留在原格。
+             * 光标可以落在任意格（含已填的题目格），落上去即进入编辑态，键盘输入直接覆盖。
+             */
+            moveCursor(from, key) {
+                if (this.boardLocked) return;
+                const row = Math.floor(from / 9), col = from % 9;
+                let r = row, c = col;
+                if (key === 'ArrowUp') r--;
+                else if (key === 'ArrowDown') r++;
+                else if (key === 'ArrowLeft') c--;
+                else c++;
+                if (r < 0 || r > 8 || c < 0 || c > 8) {
+                    // 越界：光标留在原格，但要清掉上一处光标描边，避免高亮残留在旧格
+                    this.cursorCell = from;
+                    return;
+                }
+                const target = r * 9 + c;
+                this.editingCell = target;
+                this.selectedCell = target;
+                this.cursorCell = target;
+                this.$nextTick(() => this.focusCell(target));
+            },
+            // 统一写入格子的入口：同步 input 事件路径与键盘路径
+            setCellValue(i, v) {
+                if (this.boardLocked) return;
+                this.cells[i].input = v;
+                const el = this.$refs['cellInput' + i];
+                const node = Array.isArray(el) ? el[0] : el;
+                if (node && node.value !== v) node.value = v;
+                this.invalidateSolution();
+            },
+            // 点击已经填好的格子时，把它临时还原成可编辑状态，方便改错
+            editCell(i) {
+                if (this.boardLocked) {
+                    this.selectStepFromCell(i);
+                    return;
+                }
+                if (this.cells[i].input) {
+                    this.editingCell = i;
+                    this.selectedCell = i;
+                    this.$nextTick(() => this.focusCell(i));
+                    return;
+                }
+                this.selectStepFromCell(i);
+            },
+            onCellFocus(i) {
+                this.editingCell = i;
+                this.selectedCell = i;
+            },
+            // 鼠标悬停：只记格子号，具体高亮在 cellClass 里算
+            onCellEnter(i) {
+                this.hoverCell = i;
+            },
+            onCellLeave(i) {
+                if (this.hoverCell === i) this.hoverCell = -1;
+            },
+            focusCell(i) {
+                const el = this.$refs['cellInput' + i];
+                const node = Array.isArray(el) ? el[0] : el;
+                if (!node) return;
+                if (node.focus) node.focus();
+                // maxlength=1 时把光标放末尾会让新输入被挡掉；全选后输入即覆盖，符合「改一个数字」的直觉
+                if (node.select && typeof node.value === 'string' && node.value) {
+                    node.select();
+                }
+            },
+            // 解题前把输入落盘成题目：given 一旦标记，格子就只读，
+            // 配合 solved 锁定，保证「推理完成后棋盘不可再改」
+            commitPuzzle() {
+                for (let i = 0; i < 81; i++) {
+                    this.cells[i].given = !!this.cells[i].input;
+                }
+            },
+            // 题目一改，旧的解和步骤立刻作废
+            invalidateSolution() {
+                if (this.steps.length || this.finalValues) {
+                    this.steps = [];
+                    this.finalValues = null;
+                    this.cursor = 0;
+                }
+            },
+            // 某格在棋盘上当前显示的数字（题目、已填、推理结果同一套口径）
+            valueAt(i) {
+                if (this.cells[i].input) return this.cells[i].input;
+                const shown = this.displayValue(i);
+                return shown ? String(shown) : '';
+            },
+            // 读取题目为 number[81]
+            readPuzzle() {
+                const values = new Array(81).fill(0);
+                for (let i = 0; i < 81; i++) {
+                    const v = parseInt(this.cells[i].input, 10);
+                    values[i] = isNaN(v) ? 0 : v;
+                }
+                return values;
+            },
+            checkGivenCount() {
+                if (this.givenCount < 17) {
+                    this.setMessage('当前只有 ' + this.givenCount + ' 个数字：数独至少要 17 个已知数字才可能有唯一解，请继续补充。', 'warning');
+                    return false;
+                }
+                return true;
+            },
+            solveAll() {
+                if (!this.checkGivenCount()) return;
+                const puzzle = this.readPuzzle();
+
+                // 输入本身冲突时明确提示，而不是报「无解」
+                const dup = SudokuSolver.validate(puzzle);
+                if (dup.length) {
+                    this.solved = false;
+                    this.steps = [];
+                    this.finalValues = null;
+                    this.cursor = 0;
+                    this.setMessage('题目存在冲突：' + dup[0], 'error');
+                    return;
+                }
+                if (SudokuSolver.countSolutions(puzzle) === 0) {
+                    this.solved = false;
+                    this.steps = [];
+                    this.finalValues = null;
+                    this.cursor = 0;
+                    this.setMessage('这道题无解：按数独规则怎么填都会矛盾。', 'error');
+                    return;
+                }
+
+                this.loading = true;
+                // 开始推理即锁定题目：此刻数字都已提交（想改要先「清空」重来），
+                // 避免推理跑完后才发现题目被改过、结果与棋盘对不上
+                this.commitPuzzle();
+                this.solved = true;
+                this.editingCell = -1;
+                this.hoverCell = -1;
+                this.cursorCell = -1;
+                // 让浏览器先把 loading 画出来，再跑求解
+                setTimeout(() => {
+                    try {
+                        const res = SudokuSolver.solve(puzzle);
+                        if (!res.solved) {
+                            this.solved = false;
+                            this.setMessage('未能解出该题目。', 'error');
+                            return;
+                        }
+                        this.steps = res.steps;
+                        this.finalValues = res.finalValues;
+                        // 光标归零，用户点「下一个」就能从头逐步走
+                        this.cursor = 0;
+                        this.setMessage('已解出，共 ' + this.steps.length + ' 步。点「下一个」逐步看推理，或点右侧任意一步直接跳过去。要改题目请点「清空」。', 'success');
+                    } finally {
+                        this.loading = false;
+                    }
+                }, 30);
+            },
+            solveNext() {
+                if (!this.steps.length) {
+                    this.solveAll();
+                    return;
+                }
+                if (this.cursor >= this.steps.length) {
+                    this.setMessage('已经到最后一步了，点「清空」可以开始新的一题。', 'info');
+                    return;
+                }
+                this.cursor++;
+                this.scrollToCursor();
+                if (this.cursor === this.steps.length) {
+                    this.setMessage('全部 ' + this.steps.length + ' 步已展示完毕。', 'success');
+                } else {
+                    this.setMessage('已走到第 ' + this.cursor + ' 步，共 ' + this.steps.length + ' 步。', 'info');
+                }
+            },
+            selectStep(no) {
+                this.cursor = no;
+                this.pause();
+                this.scrollToCursor();
+            },
+            // 点击格子：跳到「第一次填这个格子」的那一步
+            selectStepFromCell(idx) {
+                if (this.editingCell !== -1 && this.editingCell !== idx) this.editingCell = -1;
+                if (this.cursorCell !== -1 && this.cursorCell !== idx) this.cursorCell = -1;
+                if (!this.steps.length) {
+                    this.selectedCell = this.selectedCell === idx ? -1 : idx;
+                    return;
+                }
+                this.selectedCell = idx;
+                const hit = this.steps.find(st => (st.action === 'place' || st.action === 'trial') && st.cell === idx);
+                if (hit) {
+                    this.selectStep(hit.no);
+                }
+            },
+            scrollToCursor() {
+                this.$nextTick(() => {
+                    const root = this.$refs.root;
+                    if (!root || !root.querySelectorAll) return;
+                    const items = root.querySelectorAll('.step-item');
+                    if (items[this.cursor - 1]) items[this.cursor - 1].scrollIntoView({ block: 'nearest' });
+                });
+            },
+            play() {
+                if (!this.steps.length) return;
+                if (this.cursor >= this.steps.length) this.cursor = 0;
+                this.playing = true;
+                this.timer = setInterval(() => {
+                    if (this.cursor >= this.steps.length) {
+                        this.pause();
+                        return;
+                    }
+                    this.cursor++;
+                    this.scrollToCursor();
+                }, this.speed);
+            },
+            pause() {
+                this.playing = false;
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }
+            },
+            // 每格显示的值：给定值 > 光标之前的步骤值 > 空
+            // 编辑规则：
+            //   - 题目格子（有 input）默认显示为文本，点一下可切回输入框修改
+            //   - 空格子在有解展示时交给步骤值显示，避免把讲解内容当题目改掉
+            //   - 没有解展示时，空格子始终可输入
+            isEditable(i) {
+                if (this.boardLocked) return false;
+                if (this.editingCell === i) return true;
+                if (this.cells[i].input) return false;
+                return !this.visibleValues;
+            },
+            displayValue(i) {
+                if (this.cells[i].input) return this.cells[i].input;
+                if (this.cells[i].given) return '';
+                if (this.visibleValues) return this.visibleValues[i] || '';
+                return '';
+            },
+            cellClass(i) {
+                const cls = [];
+                const row = Math.floor(i / 9), col = i % 9;
+                if (col % 3 === 2 && col !== 8) cls.push('box-right');
+                if (row % 3 === 2 && row !== 8) cls.push('box-bottom');
+                if (this.isEditable(i)) cls.push('editable');
+                if (this.cells[i].input) cls.push('given');
+                else if (this.displayValue(i)) cls.push('filled');
+                if (this.selectedCell === i) cls.push('selected');
+                if (this.editingCell === i) cls.push('editing');
+                // 方向键移动过来的当前格：暗色下用主色内描边标出光标位置
+                if (this.cursorCell === i) cls.push('cursor-cell');
+
+                // 悬停高亮优先于步骤高亮：悬停时只跟鼠标走，避免两套高亮打架
+                if (this.hoverCell !== -1) {
+                    const hRow = Math.floor(this.hoverCell / 9), hCol = this.hoverCell % 9;
+                    if (row === hRow || col === hCol) cls.push('hl-line');
+                    // 数字相同再分两档：同行/列（或悬停格自身）更亮，其余同数格子为中亮
+                    const v = this.valueAt(this.hoverCell);
+                    if (v && this.valueAt(i) === v) {
+                        if (i === this.hoverCell || row === hRow || col === hCol) cls.push('hl-same');
+                        else cls.push('hl-equal');
+                    }
+                    return cls;
+                }
+
+                const step = this.activeStep;
+                if (!step) return cls;
+
+                // 光标停在这一步时，这一步之后的填数全部隐藏（正在编辑的格子除外）
+                if (!this.visibleValues[i] && this.editingCell !== i) cls.push('dimmed');
+
+                if ((step.action === 'place' || step.action === 'trial') && step.cell === i) cls.push('anchor');
+                if (step.impacts.some(imp => imp.type === 'eliminate' && imp.cells.indexOf(i) >= 0)) cls.push('highlight');
+                return cls;
+            },
+            stepClass(step) {
+                if (step.action === 'trial') return 'trial';
+                if (step.action === 'back') return 'back';
+                return '';
+            },
+            tagType(step) {
+                if (step.action === 'trial') return 'warning';
+                if (step.action === 'back') return 'info';
+                if (step.action === 'place') return 'success';
+                // 排除候选类的技巧用 warning 色，在深色主题下比 primary 更清楚
+                return 'warning';
+            }
+        }
+    });
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component);
+    }
+    app.mount('#el');
+</script>
+</body>
+</html>
