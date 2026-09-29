@@ -294,6 +294,54 @@
         return null;
     }
 
+    /**
+     * 三数组（Naked Triple）：单元内三格的候选数合并起来恰好是三个数字，
+     * 这三个数字必然占住这三格，单元内其他格子可以排除它们。
+     * 三个候选不必各自都只有三个（如 39 / 349 / 34 也是三数组），
+     * 只要并集是三个数字、且并集数字都落在三格之内即可。
+     */
+    function analyzeNakedTriple(state) {
+        var units = [];
+        for (var r = 0; r < 9; r++) units.push(['row', r]);
+        for (var c = 0; c < 9; c++) units.push(['col', c]);
+        for (var b = 0; b < 9; b++) units.push(['box', b]);
+        for (var u = 0; u < units.length; u++) {
+            var type = units[u][0], n = units[u][1], cells = unitCells(type, n);
+            var empty = cells.filter(function (i) { return state.values[i] === 0; });
+            for (var a = 0; a < empty.length; a++) {
+                var ma = state.candidates[empty[a]];
+                if (popcount(ma) < 2 || popcount(ma) > 3) continue;
+                for (var b2 = a + 1; b2 < empty.length; b2++) {
+                    var mb = state.candidates[empty[b2]];
+                    if (popcount(mb) < 2 || popcount(mb) > 3) continue;
+                    for (var c2 = b2 + 1; c2 < empty.length; c2++) {
+                        var mc = state.candidates[empty[c2]];
+                        if (popcount(mc) < 2 || popcount(mc) > 3) continue;
+                        var union = ma | mb | mc;
+                        if (popcount(union) !== 3) continue;
+                        var tri = [empty[a], empty[b2], empty[c2]], ds = digitsOf(union);
+                        var specs = [];
+                        for (var t = 0; t < ds.length; t++) {
+                            var bit = 1 << (ds[t] - 1);
+                            var targets = cells.filter(function (i) {
+                                return tri.indexOf(i) === -1 && state.values[i] === 0 && (state.candidates[i] & bit);
+                            });
+                            if (targets.length) specs.push({ type: 'eliminate', digit: ds[t], cells: targets });
+                        }
+                        if (!specs.length) continue;
+                        return {
+                            type: 'nakedTriple',
+                            reason: unitLabel(type, n) + '的 ' + listCellNames(tri) + ' 的候选数合起来只有 ' + listDigits(ds) + '，这三个数字必然占住这三格',
+                            check: '所以' + unitLabel(type, n) + '中其他格子不能再出现 ' + listDigits(ds),
+                            apply: function () { return specs; }
+                        };
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     function pointingStep(b, d, spots, unitName, targets) {
         return {
             type: 'pointing',
@@ -385,6 +433,7 @@
             pointing: '锁定候选（指向）',
             claiming: '锁定候选（占位）',
             nakedPair: '数字对排除',
+            nakedTriple: '三数组排除',
             trial: '试探填数',
             back: '回退'
         };
@@ -397,7 +446,8 @@
         if (single) return single;
         var hidden = findHiddenSingle(state);
         if (hidden) return hidden;
-        return analyzePointing(state) || analyzeClaiming(state) || analyzeNakedPair(state);
+        return analyzePointing(state) || analyzeClaiming(state) ||
+            analyzeNakedPair(state) || analyzeNakedTriple(state);
     }
 
     // 只做逻辑推理，直到推不动；返回是否已填满
