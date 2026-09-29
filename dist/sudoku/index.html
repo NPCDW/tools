@@ -16,7 +16,7 @@
         .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
         .tips { margin: 8px 0; font-size: 13px; color: var(--el-color-info); }
 
-        /* 坐标系：左列标行名 A-I，上行标列号 1-9，与推理文案里的 A1 保持一致 */
+        /* 坐标系：左列标行名 R1-R9，上行标列名 C1-C9，与推理文案里的 R1C1 保持一致 */
         /* 棋盘 + 坐标系一起按容器宽度自适应，窄屏不出现横向滚动 */
         /* flex: 1 1 494px 让棋盘在窄屏也能撑满可用宽度（auto 基准会收缩到内容宽度） */
         .board-wrap { display: grid; gap: 4px; flex: 1 1 494px; width: 100%; max-width: 494px;
@@ -133,7 +133,7 @@
             <div class="board-wrap">
                 <div class="corner"></div>
                 <div class="col-labels">
-                    <span v-for="c in 9" :key="'c' + c">{{ c }}</span>
+                    <span v-for="c in 9" :key="'c' + c">{{ colName(c - 1) }}</span>
                 </div>
                 <div class="row-labels">
                     <span v-for="r in 9" :key="'r' + r">{{ rowName(r - 1) }}</span>
@@ -165,7 +165,7 @@
                 <div>选中某一步后，这一步之后的数字会被隐藏，只显示到该步为止。</div>
                 <div>点「全部解出」开始推理后棋盘会锁定：方向键与数字键都不再响应，要改题目请点「清空」。</div>
                 <div>解出前，方向键 ↑↓←→ 可在格子间移动光标，光标所在格用细描边标出，可直接输入数字。</div>
-                <div>棋盘左边 A-I 表示行、上边 1-9 表示列，格子坐标为「行名+列号」，如 A1、C5。</div>
+                <div>棋盘左边 R1-R9 表示行、上边 C1-C9 表示列，格子坐标为「行标+列标」，如 R1C1、R3C5。</div>
                 <div>「复制」复制的是棋盘当前显示的数字（空格为 -），每行 9 格，粘贴回来可以直接还原题目。</div>
             </div>
         </div>
@@ -260,9 +260,12 @@
             cellName(idx) {
                 return SudokuSolver.cellName(idx);
             },
-            // 行名与求解器一致（A-I），保证棋盘标注和推理文案对得上
+            // 行列标注与求解器一致（行 R1-R9、列 C1-C9），保证棋盘标注和推理文案对得上
             rowName(r) {
-                return 'ABCDEFGHI'[r] || '';
+                return 'R' + (r + 1);
+            },
+            colName(c) {
+                return 'C' + (c + 1);
             },
             resetBoard() {
                 this.pause();

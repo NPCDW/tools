@@ -10,7 +10,8 @@
 (function (global) {
     'use strict';
 
-    var ROW_NAME = 'ABCDEFGHI';
+    var ROW_LABEL = 'R';
+    var COL_LABEL = 'C';
     var ALL = 0x1ff;
     var FULL_PEERS = null;
 
@@ -18,7 +19,7 @@
     function rowOf(i) { return Math.floor(i / 9); }
     function colOf(i) { return i % 9; }
     function boxOf(i) { return Math.floor(Math.floor(i / 9) / 3) * 3 + Math.floor((i % 9) / 3); }
-    function cellName(i) { return ROW_NAME[rowOf(i)] + (colOf(i) + 1); }
+    function cellName(i) { return ROW_LABEL + (rowOf(i) + 1) + COL_LABEL + (colOf(i) + 1); }
 
     function peersOf(i) {
         if (!FULL_PEERS) {
@@ -54,8 +55,8 @@
         return boxCells(n);
     }
     function unitLabel(type, n) {
-        if (type === 'row') return '第' + ROW_NAME[n] + '行';
-        if (type === 'col') return '第' + (n + 1) + '列';
+        if (type === 'row') return '第' + ROW_LABEL + (n + 1) + '行';
+        if (type === 'col') return '第' + COL_LABEL + (n + 1) + '列';
         return boxName(n);
     }
 
@@ -207,7 +208,8 @@
                 var sameCol = spots.every(function (i) { return colOf(i) === colOf(spots[0]); });
                 if (!sameRow && !sameCol) continue;
                 var unitCells_ = sameRow ? rowCells(rowOf(spots[0])) : colCells(colOf(spots[0]));
-                var unitName = sameRow ? ('第' + ROW_NAME[rowOf(spots[0])] + '行') : ('第' + (colOf(spots[0]) + 1) + '列');
+                var unitName = sameRow ? ('第' + ROW_LABEL + (rowOf(spots[0]) + 1) + '行')
+                                       : ('第' + COL_LABEL + (colOf(spots[0]) + 1) + '列');
                 var targets = unitCells_.filter(function (i) {
                     return boxOf(i) !== b && state.values[i] === 0 && (state.candidates[i] & (1 << (d - 1)));
                 });
@@ -590,13 +592,13 @@
             cells.forEach(function (i) {
                 var v = values[i];
                 if (v === 0) return;
-                // 用 in 判断：index 0 的格子是合法值，直接判真会漏掉 A1 这类首格
+                // 用 in 判断：index 0 的格子是合法值，直接判真会漏掉 R1C1 这类首格
                 if (v in seen) out.push(name + ' 中数字 ' + v + ' 重复（' + cellName(seen[v]) + ' 与 ' + cellName(i) + '）');
                 else seen[v] = i;
             });
         }
-        for (var r = 0; r < 9; r++) checkUnit(rowCells(r), '第' + ROW_NAME[r] + '行');
-        for (var c = 0; c < 9; c++) checkUnit(colCells(c), '第' + (c + 1) + '列');
+        for (var r = 0; r < 9; r++) checkUnit(rowCells(r), '第' + ROW_LABEL + (r + 1) + '行');
+        for (var c = 0; c < 9; c++) checkUnit(colCells(c), '第' + COL_LABEL + (c + 1) + '列');
         for (var b = 0; b < 9; b++) checkUnit(boxCells(b), boxName(b));
         return out;
     }
