@@ -10,8 +10,8 @@
 (function (global) {
     'use strict';
 
-    var ROW_LABEL = 'R';
-    var COL_LABEL = 'C';
+    var ROW_LABEL = 'r';
+    var COL_LABEL = 'c';
     var ALL = 0x1ff;
     var FULL_PEERS = null;
 
@@ -592,7 +592,7 @@
             cells.forEach(function (i) {
                 var v = values[i];
                 if (v === 0) return;
-                // 用 in 判断：index 0 的格子是合法值，直接判真会漏掉 R1C1 这类首格
+                // 用 in 判断：index 0 的格子是合法值，直接判真会漏掉 r1c1 这类首格
                 if (v in seen) out.push(name + ' 中数字 ' + v + ' 重复（' + cellName(seen[v]) + ' 与 ' + cellName(i) + '）');
                 else seen[v] = i;
             });
